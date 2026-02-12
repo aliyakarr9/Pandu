@@ -5,12 +5,13 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            // MARK: - Arka Plan (Oyunla Uyumlu Koyu Tema)
+            // MARK: - Arka Plan
             Color.black.edgesIgnoringSafeArea(.all)
             
             ScrollView {
-                VStack(spacing: 30) {
-                    // MARK: - Başlık Bölümü (Okunabilirlik Artırıldı)
+                VStack(spacing: 25) {
+                    
+                    // MARK: - 1. Başlık Bölümü
                     VStack(spacing: 12) {
                         Text("Kelime Tahmini")
                             .font(.system(size: 42, weight: .black, design: .rounded))
@@ -26,36 +27,89 @@ struct HomeView: View {
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white.opacity(0.6))
                     }
-                    .padding(.top, 60) // Dynamic Island payı
+                    .padding(.top, 80)
 
-                    // MARK: - Takımlar Kartı (Dark Glassmorphism)
-                    VStack(alignment: .leading, spacing: 20) {
+                    // MARK: - 2. Takımlar Kartı
+                    VStack(alignment: .leading, spacing: 15) {
                         Label("Takımlar", systemImage: "person.2.fill")
                             .font(.headline)
-                            .foregroundColor(.purple)
-
-                        VStack(spacing: 15) {
-                            TeamInputRow(color: viewModel.teams[0].color, placeholder: "1. Takım Adı", text: $viewModel.teams[0].name)
+                            .foregroundColor(.white.opacity(0.8))
+                        
+                        HStack(spacing: 12) {
+                            ModernTeamInput(
+                                color: .purple,
+                                placeholder: "1. Takım",
+                                text: $viewModel.teams[0].name
+                            )
                             
-                            TeamInputRow(color: viewModel.teams[1].color, placeholder: "2. Takım Adı", text: $viewModel.teams[1].name)
+                            Text("VS")
+                                .font(.system(size: 14, weight: .black, design: .rounded))
+                                .foregroundColor(.white.opacity(0.2))
+                                .padding(.top, 10)
+                            
+                            ModernTeamInput(
+                                color: .orange,
+                                placeholder: "2. Takım",
+                                text: $viewModel.teams[1].name
+                            )
                         }
                     }
                     .padding(20)
                     .background(Color.white.opacity(0.05))
-                    .cornerRadius(25)
-                    .overlay(RoundedRectangle(cornerRadius: 25).stroke(Color.white.opacity(0.1), lineWidth: 1))
+                    .cornerRadius(30)
+                    .padding(.horizontal, 20)
 
-                    // MARK: - Ayarlar Kartı (Okunaklı Sliderlar)
-                    VStack(alignment: .leading, spacing: 25) {
+                    // MARK: - 3. Ayarlar Kartı (GÜNCELLENDİ)
+                    VStack(alignment: .leading, spacing: 20) {
                         Label("Oyun Ayarları", systemImage: "gearshape.fill")
                             .font(.headline)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.white.opacity(0.8))
+                        
+                        VStack(spacing: 15) { // Boşluklar biraz daraltıldı
+                            
+                            // Paket Seçimi Satırı
+                            Button(action: {
+                                withAnimation {
+                                    viewModel.returnToCategories()
+                                }
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("AKTİF PAKET")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundColor(.white.opacity(0.4))
+                                        
+                                        Text(viewModel.selectedCategoryName)
+                                            .font(.system(size: 18, weight: .black, design: .rounded))
+                                            .foregroundColor(.purple)
+                                    }
+                                    Spacer()
+                                    HStack(spacing: 8) {
+                                        Text("Değiştir")
+                                            .font(.system(size: 13, weight: .bold))
+                                            .foregroundColor(.white.opacity(0.4))
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 14, weight: .bold))
+                                            .foregroundColor(.white.opacity(0.3))
+                                    }
+                                }
+                                .padding()
+                                .background(Color.white.opacity(0.05))
+                                .cornerRadius(18)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 18)
+                                        .stroke(LinearGradient(colors: [.purple.opacity(0.4), .blue.opacity(0.4)], startPoint: .leading, endPoint: .trailing), lineWidth: 1)
+                                )
+                            }
 
-                        VStack(spacing: 25) {
+                            Divider().background(Color.white.opacity(0.1))
+
+                            // YENİ MODERN SLIDERLAR
                             SettingsSliderRow(
-                                title: "Tur Süresi",
-                                valueText: "\(viewModel.settings.roundTime) sn",
-                                color: .purple,
+                                title: "Süre",
+                                icon: "timer",
+                                valueText: "\(viewModel.settings.roundTime)s",
+                                color: .blue,
                                 value: Binding(
                                     get: { Double(viewModel.settings.roundTime) },
                                     set: { viewModel.settings.roundTime = Int($0) }
@@ -65,97 +119,101 @@ struct HomeView: View {
                             )
 
                             SettingsSliderRow(
-                                title: "Hedef Skor",
-                                valueText: "\(viewModel.settings.targetScore) puan",
-                                color: .blue,
+                                title: "Hedef",
+                                icon: "target",
+                                valueText: "\(viewModel.settings.targetScore)",
+                                color: .green,
                                 value: Binding(
                                     get: { Double(viewModel.settings.targetScore) },
                                     set: { viewModel.settings.targetScore = Int($0) }
                                 ),
                                 range: 10...100,
-                                step: 10
+                                step: 5
                             )
 
-                            // Maksimum Pas (HUD Stilinde)
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack {
-                                    Text("Maksimum Pas")
-                                        .fontWeight(.medium)
-                                        .foregroundColor(.white)
-                                    Spacer()
-                                    Text(viewModel.settings.maxPassCount == -1 ? "Sınırsız" : "\(viewModel.settings.maxPassCount)")
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.purple)
-                                }
-                                
-                                Slider(value: Binding(
-                                    get: { viewModel.settings.maxPassCount == -1 ? 0 : Double(viewModel.settings.maxPassCount + 1) },
-                                    set: { newValue in
-                                        if newValue == 0 { viewModel.settings.maxPassCount = -1 }
-                                        else { viewModel.settings.maxPassCount = Int(newValue - 1) }
+                            SettingsSliderRow(
+                                title: "Pas",
+                                icon: "forward.fill",
+                                valueText: viewModel.settings.maxPassCount < 0 ? "∞" : "\(viewModel.settings.maxPassCount)",
+                                color: .yellow,
+                                value: Binding(
+                                    get: { Double(viewModel.settings.maxPassCount < 0 ? 11 : viewModel.settings.maxPassCount) },
+                                    set: { val in
+                                        if val > 10 { viewModel.settings.maxPassCount = -1 }
+                                        else { viewModel.settings.maxPassCount = Int(val) }
                                     }
-                                ), in: 0...11, step: 1)
-                                .accentColor(.purple)
-                            }
+                                ),
+                                range: 0...11,
+                                step: 1
+                            )
                         }
                     }
-                    .padding(20)
+                    .padding(25)
                     .background(Color.white.opacity(0.05))
-                    .cornerRadius(25)
-                    .overlay(RoundedRectangle(cornerRadius: 25).stroke(Color.white.opacity(0.1), lineWidth: 1))
+                    .cornerRadius(30)
+                    .padding(.horizontal, 20)
 
-                    // MARK: - Başlat Butonu
+                    // MARK: - 4. Başla Butonu
                     Button(action: {
-                        withAnimation { viewModel.startGame() }
-                    }) {
-                        HStack {
-                            Text("OYUNU BAŞLAT")
-                            Image(systemName: "play.fill")
+                        withAnimation {
+                            viewModel.startGame()
                         }
-                        .font(.headline)
-                        .fontWeight(.black)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 20)
-                        .background(
-                            LinearGradient(colors: [.purple, .blue], startPoint: .leading, endPoint: .trailing)
-                        )
-                        .cornerRadius(22)
-                        .shadow(color: .purple.opacity(0.3), radius: 10, y: 5)
+                    }) {
+                        Text("OYUNU BAŞLAT")
+                            .font(.system(size: 20, weight: .heavy, design: .rounded))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 20)
+                            .background(
+                                LinearGradient(
+                                    colors: [.purple, .blue],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(25)
+                            .shadow(color: .purple.opacity(0.3), radius: 10, y: 5)
                     }
                     .padding(.top, 10)
                     .padding(.bottom, 40)
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
             }
         }
     }
 }
 
-// MARK: - Güncellenmiş Okunaklı Alt Bileşenler
-struct TeamInputRow: View {
+// MARK: - Alt Bileşenler (Modern Team Input)
+struct ModernTeamInput: View {
     let color: Color
     let placeholder: String
     @Binding var text: String
     
     var body: some View {
-        HStack(spacing: 15) {
-            Circle()
+        VStack(spacing: 8) {
+            Capsule()
                 .fill(color)
-                .frame(width: 10, height: 10)
+                .frame(width: 30, height: 4)
             
-            TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.white.opacity(0.3)))
+            TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.white.opacity(0.2)))
                 .foregroundColor(.white)
-                .font(.system(size: 16, weight: .medium, design: .rounded))
+                .font(.system(size: 15, weight: .bold, design: .rounded))
+                .multilineTextAlignment(.center)
+                .padding(.vertical, 12)
+                .background(Color.white.opacity(0.08))
+                .cornerRadius(15)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(color.opacity(0.3), lineWidth: 1)
+                )
         }
-        .padding()
-        .background(Color.white.opacity(0.08))
-        .cornerRadius(15)
     }
 }
 
+// MARK: - YENİ MODERN VE KÜÇÜK SLIDER BİLEŞENİ
 struct SettingsSliderRow: View {
     let title: String
+    let icon: String
     let valueText: String
     let color: Color
     @Binding var value: Double
@@ -163,14 +221,31 @@ struct SettingsSliderRow: View {
     let step: Double
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(title).foregroundColor(.white).fontWeight(.medium)
-                Spacer()
-                Text(valueText).foregroundColor(color).fontWeight(.bold)
+        HStack(spacing: 15) {
+            // İkon ve Başlık Grubu
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(color)
+                    .frame(width: 20)
+                
+                Text(title)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.7))
             }
+            .frame(width: 70, alignment: .leading)
+            
+            // Slider
             Slider(value: $value, in: range, step: step)
-                .accentColor(color)
+                .tint(color)
+                .scaleEffect(0.9) // Slider'ı biraz küçülttük
+            
+            // Değer Göstergesi
+            Text(valueText)
+                .font(.system(size: 14, weight: .black, design: .monospaced))
+                .foregroundColor(color)
+                .frame(width: 45, alignment: .trailing)
         }
+        .padding(.vertical, 4)
     }
 }

@@ -13,7 +13,7 @@ struct GameView: View {
 
     var body: some View {
         ZStack {
-            // MARK: - Arka Plan
+            // MARK: - Arka Plan (Senin Tasarımın)
             LinearGradient(
                 gradient: Gradient(colors: [
                     viewModel.currentTeam.color.opacity(0.4),
@@ -26,12 +26,12 @@ struct GameView: View {
             .edgesIgnoringSafeArea(.all)
 
             VStack(spacing: 0) {
-                // MARK: - 1. Yeni Minimal Üst Panel (Dynamic Island Dostu)
-                HStack(spacing: 20) {
+                // MARK: - 1. Üst Panel (Durdurma Butonu Eklendi)
+                HStack(spacing: 15) {
                     // Çıkış Butonu
                     Button(action: { showQuitAlert = true }) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 18, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.white)
                             .frame(width: 40, height: 40)
                             .background(Color.white.opacity(0.12))
@@ -46,9 +46,21 @@ struct GameView: View {
                         )
                     }
 
+                    // DURDURMA BUTONU
+                    Button(action: {
+                        withAnimation { viewModel.pauseGame() }
+                    }) {
+                        Image(systemName: "pause.fill")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 40, height: 40)
+                            .background(Color.white.opacity(0.12))
+                            .clipShape(Circle())
+                    }
+
                     Spacer()
 
-                    // Dinamik Sayaç (Daha aşağıda ve minimal)
+                    // Dinamik Sayaç
                     ZStack {
                         Circle()
                             .stroke(Color.white.opacity(0.1), lineWidth: 5)
@@ -62,10 +74,10 @@ struct GameView: View {
                             .rotationEffect(Angle(degrees: 270.0))
 
                         Text("\(viewModel.timeRemaining)")
-                            .font(.system(size: 24, weight: .black, design: .monospaced))
+                            .font(.system(size: 22, weight: .black, design: .monospaced))
                             .foregroundColor(isTimeCritical ? .red : .white)
                     }
-                    .frame(width: 60, height: 60)
+                    .frame(width: 55, height: 55)
 
                     Spacer()
 
@@ -74,24 +86,21 @@ struct GameView: View {
                         Text(viewModel.currentTeam.name.uppercased())
                             .font(.system(size: 10, weight: .black))
                             .foregroundColor(.white.opacity(0.5))
-                            .lineLimit(1)
                         
                         Text("\(viewModel.roundScore)")
-                            .font(.system(size: 30, weight: .heavy, design: .rounded))
+                            .font(.system(size: 28, weight: .heavy, design: .rounded))
                             .foregroundColor(.white)
                     }
                     .frame(width: 80, alignment: .trailing)
                 }
-                .padding(.horizontal, 25)
-                .padding(.vertical, 15)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 30)
                         .fill(Color.black.opacity(0.4))
                         .background(.ultraThinMaterial)
                         .cornerRadius(30)
                 )
-                // MARK: DYNAMIC ISLAND KAÇIŞI
-                // Dynamic Island'ın (çentiğin) altına düşmesi için padding artırıldı
                 .padding(.top, 70)
                 .padding(.horizontal)
 
@@ -99,9 +108,10 @@ struct GameView: View {
 
                 // MARK: - 2. Kart Alanı
                 if let card = viewModel.currentCard {
-                    ModernCardView(card: card)
+                    // ModernCardView artık aşağıda tanımlı olduğu için hata vermeyecek
+                    InternalModernCardView(card: card)
                         .offset(offset)
-                        .rotationEffect(.degrees(Double(offset.width / 12)))
+                        .rotationEffect(Angle(degrees: Double(offset.width / 12)))
                         .gesture(
                             DragGesture()
                                 .onChanged { gesture in
@@ -123,7 +133,7 @@ struct GameView: View {
                     ProgressView().tint(.white).scaleEffect(1.5)
                 }
 
-                // MARK: - 3. Pas Hakkı (Minimal HUD)
+                // MARK: - 3. Pas Hakkı Bilgisi
                 if viewModel.settings.maxPassCount >= 0 {
                     HStack(spacing: 6) {
                         Image(systemName: "bolt.fill")
@@ -143,20 +153,53 @@ struct GameView: View {
 
                 // MARK: - 4. Kontrol Butonları
                 HStack(spacing: 30) {
-                    ControlButton(icon: "arrow.right.arrow.left", label: "PAS", color: .yellow, isDisabled: viewModel.isPassLimitReached) { viewModel.markPass() }
-                    ControlButton(icon: "hand.raised.fill", label: "TABU", color: .red, isLarge: true) { viewModel.markTaboo() }
-                    ControlButton(icon: "checkmark", label: "DOĞRU", color: .green) { viewModel.markCorrect() }
+                    InternalControlButton(icon: "arrow.right.arrow.left", label: "PAS", color: .yellow, isDisabled: viewModel.isPassLimitReached) { viewModel.markPass() }
+                    InternalControlButton(icon: "hand.raised.fill", label: "TABU", color: .red, isLarge: true) { viewModel.markTaboo() }
+                    InternalControlButton(icon: "checkmark", label: "DOĞRU", color: .green) { viewModel.markCorrect() }
                 }
                 .padding(.bottom, 60)
+            }
+
+            // MARK: - 5. Pause Overlay (Durdurma Ekranı)
+            if viewModel.gameState == .paused {
+                ZStack {
+                    Color.black.opacity(0.85)
+                        .edgesIgnoringSafeArea(.all)
+                        .background(.ultraThinMaterial)
+
+                    VStack(spacing: 30) {
+                        Image(systemName: "play.circle.fill")
+                            .font(.system(size: 80))
+                            .foregroundColor(viewModel.currentTeam.color)
+                        
+                        Text("OYUN DURAKLATILDI")
+                            .font(.system(size: 24, weight: .black, design: .rounded))
+                            .foregroundColor(.white)
+
+                        Button(action: {
+                            withAnimation { viewModel.resumeGame() }
+                        }) {
+                            Text("DEVAM ET")
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                                .padding(.vertical, 15)
+                                .padding(.horizontal, 40)
+                                .background(viewModel.currentTeam.color)
+                                .cornerRadius(20)
+                        }
+                    }
+                }
+                .transition(.opacity)
+                .zIndex(10)
             }
         }
     }
 
     private var swipeIndicators: some View {
         ZStack {
-            if offset.width > 60 { SwipeIndicatorIcon(icon: "checkmark.circle.fill", color: .green) }
-            else if offset.width < -60 && !viewModel.isPassLimitReached { SwipeIndicatorIcon(icon: "arrow.right.circle.fill", color: .yellow) }
-            else if offset.height > 60 { SwipeIndicatorIcon(icon: "xmark.circle.fill", color: .red) }
+            if offset.width > 60 { InternalSwipeIndicatorIcon(icon: "checkmark.circle.fill", color: .green) }
+            else if offset.width < -60 && !viewModel.isPassLimitReached { InternalSwipeIndicatorIcon(icon: "arrow.right.circle.fill", color: .yellow) }
+            else if offset.height > 60 { InternalSwipeIndicatorIcon(icon: "xmark.circle.fill", color: .red) }
         }
     }
 
@@ -170,8 +213,9 @@ struct GameView: View {
     }
 }
 
-// MARK: - MODERN CARD VIEW
-struct ModernCardView: View {
+// MARK: - ÖZEL ALT BİLEŞENLER (Çakışmayı önlemek için isimleri güncellendi)
+
+struct InternalModernCardView: View {
     let card: WordCard
 
     var body: some View {
@@ -226,7 +270,7 @@ struct ModernCardView: View {
             }
             .padding(.vertical, 25)
         }
-        .frame(width: 340, height: 530) // Kart boyutu hafif daraltıldı orantı için
+        .frame(width: 340, height: 530)
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 40)
@@ -239,5 +283,50 @@ struct ModernCardView: View {
             }
         )
         .shadow(color: Color.black.opacity(0.5), radius: 30, x: 0, y: 20)
+    }
+}
+
+struct InternalControlButton: View {
+    let icon: String
+    let label: String
+    let color: Color
+    var isDisabled: Bool = false
+    var isLarge: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: isLarge ? 32 : 24, weight: .bold))
+                Text(label)
+                    .font(.system(size: 12, weight: .black))
+            }
+            .frame(width: isLarge ? 90 : 75, height: isLarge ? 90 : 75)
+            .background(
+                ZStack {
+                    if isDisabled {
+                        Circle().fill(Color.white.opacity(0.1))
+                    } else {
+                        Circle().fill(color.opacity(0.15))
+                        Circle().stroke(color.opacity(0.4), lineWidth: 2)
+                    }
+                }
+            )
+            .foregroundColor(isDisabled ? .white.opacity(0.2) : color)
+        }
+        .disabled(isDisabled)
+    }
+}
+
+struct InternalSwipeIndicatorIcon: View {
+    let icon: String
+    let color: Color
+    var body: some View {
+        Image(systemName: icon)
+            .font(.system(size: 80))
+            .foregroundColor(color)
+            .shadow(color: color.opacity(0.5), radius: 20)
+            .opacity(0.8)
     }
 }

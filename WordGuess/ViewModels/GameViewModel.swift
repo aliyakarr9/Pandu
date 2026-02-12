@@ -4,32 +4,64 @@ import SwiftUI
 
 class GameViewModel: ObservableObject {
     @Published var teams: [Team] = [
-        Team(name: "Team A", color: .purple),
-        Team(name: "Team B", color: .orange)
+        Team(name: "1. Takım", color: .purple),
+        Team(name: "2. Takım", color: .orange)
     ]
     @Published var currentTeamIndex: Int = 0
-    @Published var gameState: GameState = .idle
+    
+    // BAŞLANGIÇ DURUMU:
+    @Published var gameState: GameState = .categorySelection
+    
     @Published var currentCard: WordCard?
     @Published var timeRemaining: Int = 60
-    @Published var roundScore: Int = 0 
-    @Published var passesUsed: Int = 0 
+    @Published var roundScore: Int = 0
+    @Published var passesUsed: Int = 0
     @Published var settings: GameSettings = GameSettings()
 
     private var deck: [WordCard] = []
     private var usedCards: [WordCard] = []
     private var timerCancellable: AnyCancellable?
+    
+    // Hafızada tutulan teknik dosya ismi (örn: words.json)
+    private var currentCategoryFileName: String = "words"
+    
+    // MARK: - YENİ EKLENEN DEĞİŞKEN
+    // Arayüzde görünecek olan paketin adı (örn: "Klasik", "Sinema")
+    @Published var selectedCategoryName: String = "Klasik"
 
     var currentTeam: Team {
         teams[currentTeamIndex]
     }
 
     init() {
-        loadDeck()
+        // Otomatik yüklemeyi kaldırdık, seçim bekliyoruz.
     }
 
-    func loadDeck() {
-        deck = DataLoader.shared.load("words.json")
+    // MARK: - GÜNCELLENMİŞ FONKSİYONLAR
+    
+    // Artık hem dosya ismini hem de ekranda görünecek başlığı alıyor
+    func selectCategory(fileName: String, categoryTitle: String) {
+        self.currentCategoryFileName = fileName
+        self.selectedCategoryName = categoryTitle // Ekranda görünecek ismi kaydet
+        loadDeck(fileName: fileName)
+        
+        withAnimation {
+            gameState = .idle
+        }
+    }
+    
+    func returnToCategories() {
+        timerCancellable?.cancel()
+        withAnimation {
+            gameState = .categorySelection
+        }
+    }
+
+    func loadDeck(fileName: String = "words") {
+        let file = fileName.hasSuffix(".json") ? fileName : "\(fileName).json"
+        deck = DataLoader.shared.load(file)
         deck.shuffle()
+        usedCards.removeAll()
     }
 
     // MARK: - Game Flow
@@ -38,8 +70,6 @@ class GameViewModel: ObservableObject {
         teams[0].score = 0
         teams[1].score = 0
         currentTeamIndex = 0
-        // Oyun başladığında ilk olarak Skor Tablosu (Between Rounds) görünür, 
-        // böylece takımlar hazır olduklarında "Başlat" diyebilir.
         gameState = .betweenRounds
     }
 
@@ -66,14 +96,12 @@ class GameViewModel: ObservableObject {
         timerCancellable?.cancel()
         teams[currentTeamIndex].score += roundScore
 
-        // Raund bittiğinde win condition kontrolü yap
         if checkWinCondition() { return }
 
         gameState = .betweenRounds
         SoundManager.shared.playTimeUpSound()
         HapticManager.shared.notification(type: .warning)
 
-        // Sırayı diğer takıma geçir
         currentTeamIndex = (currentTeamIndex + 1) % teams.count
     }
 
@@ -87,7 +115,8 @@ class GameViewModel: ObservableObject {
         teams[0].score = 0
         teams[1].score = 0
         currentTeamIndex = 0
-        loadDeck()
+        // Son seçilen paketi tekrar yükle
+        loadDeck(fileName: currentCategoryFileName)
     }
 
     // MARK: - Game Logic
@@ -124,7 +153,6 @@ class GameViewModel: ObservableObject {
         SoundManager.shared.playCorrectSound()
         HapticManager.shared.notification(type: .success)
 
-        // ANLIK KAZANMA KONTROLÜ (Instant Win Check)
         let currentTotalScore = teams[currentTeamIndex].score + roundScore
         if currentTotalScore >= settings.targetScore {
             teams[currentTeamIndex].score = currentTotalScore
@@ -132,7 +160,6 @@ class GameViewModel: ObservableObject {
             timerCancellable?.cancel()
             return
         }
-
         nextCard()
     }
 
@@ -147,12 +174,10 @@ class GameViewModel: ObservableObject {
     }
 
     func markPass() {
-        // PAS LİMİTİ KONTROLÜ
         if settings.maxPassCount >= 0 && passesUsed >= settings.maxPassCount {
             HapticManager.shared.notification(type: .error)
             return
         }
-
         passesUsed += 1
         if let card = currentCard {
             usedCards.append(card)
@@ -169,7 +194,6 @@ class GameViewModel: ObservableObject {
         return false
     }
 
-    // UI için yardımcı değişken
     var isPassLimitReached: Bool {
         guard settings.maxPassCount >= 0 else { return false }
         return passesUsed >= settings.maxPassCount

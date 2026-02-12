@@ -1,10 +1,11 @@
 import Foundation
 
 enum GameState {
-    case idle
-    case playing
-    case paused
-    case roundOver
-    case betweenRounds // Jules'un raoundlar arası skor tablosu için eklediği durum
-    case gameOver
+    case categorySelection // <--- YENİ: Giriş ve Paket Seçim Ekranı
+    case idle              // Takım ve Süre Ayarları (HomeView)
+    case playing           // Oyun Ekranı
+    case paused            // Duraklatıldı
+    case roundOver         // Tur Bitti
+    case betweenRounds     // Skor Tablosu
+    case gameOver          // Kazanan Ekranı
 }

@@ -9,6 +9,11 @@ struct WordGuessApp: App {
         WindowGroup {
             ZStack {
                 switch viewModel.gameState {
+                // YENİ EKLENEN KISIM BURASI
+                case .categorySelection:
+                    CategorySelectionView(viewModel: viewModel)
+                        .transition(.opacity)
+                    
                 case .idle:
                     HomeView(viewModel: viewModel)
                         .transition(.asymmetric(insertion: .opacity, removal: .move(edge: .leading)))
