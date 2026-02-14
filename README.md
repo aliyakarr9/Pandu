@@ -24,7 +24,7 @@
 
 | Skor Tablosu | Şampiyon Ekranı |
 |---|---|
-| <img src="Screenshots/skorekrani.jpeg" width="220"> | <img src="Screenshots/sampiyonekrani.jpg" width="220"> |
+| <img src="Screenshots/skorekrani.jpeg" width="220"> | <img src="Screenshots/sampiyonekrani.jpeg" width="220"> |
 
 ## 🛠 Teknik Detaylar
 
@@ -44,4 +44,4 @@
 4.  `Cmd + R` tuşuna basarak projeyi çalıştırın.
 
 ---
-**Geliştiren:** [Ali Yakar](https://github.com/aliyakarr9) - DAÜ Bilişim Sistemleri ve Teknolojileri Öğrencisi
+**Geliştiren:** [Ali Yakar](https://github.com/aliyakarr9) 
