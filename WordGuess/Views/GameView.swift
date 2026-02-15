@@ -1,4 +1,5 @@
 import SwiftUI
+import AudioToolbox // Ses efektleri için gerekli
 
 struct GameView: View {
     @ObservedObject var viewModel: GameViewModel
@@ -6,14 +7,16 @@ struct GameView: View {
     @State private var offset: CGSize = .zero
     @State private var showQuitAlert: Bool = false
     
+    // Son 10 saniye kontrolü
     private var isTimeCritical: Bool { viewModel.timeRemaining <= 10 }
+    
     private var progress: Double {
         Double(viewModel.timeRemaining) / Double(viewModel.settings.roundTime)
     }
 
     var body: some View {
         ZStack {
-            // MARK: - Arka Plan (Senin Tasarımın)
+            // MARK: - Arka Plan
             LinearGradient(
                 gradient: Gradient(colors: [
                     viewModel.currentTeam.color.opacity(0.4),
@@ -26,7 +29,7 @@ struct GameView: View {
             .edgesIgnoringSafeArea(.all)
 
             VStack(spacing: 0) {
-                // MARK: - 1. Üst Panel (Durdurma Butonu Eklendi)
+                // MARK: - 1. Üst Panel
                 HStack(spacing: 15) {
                     // Çıkış Butonu
                     Button(action: { showQuitAlert = true }) {
@@ -60,11 +63,13 @@ struct GameView: View {
 
                     Spacer()
 
-                    // Dinamik Sayaç
+                    // MARK: DİNAMİK SAYAÇ (Düzeltilen Kısım)
                     ZStack {
+                        // Arka halka
                         Circle()
                             .stroke(Color.white.opacity(0.1), lineWidth: 5)
                         
+                        // İlerleme halkası
                         Circle()
                             .trim(from: 0.0, to: CGFloat(progress))
                             .stroke(
@@ -72,10 +77,19 @@ struct GameView: View {
                                 style: StrokeStyle(lineWidth: 5, lineCap: .round)
                             )
                             .rotationEffect(Angle(degrees: 270.0))
+                            .animation(.linear(duration: 1.0), value: progress) // Sadece halkayı yumuşat
 
+                        // Sayaç Metni
                         Text("\(viewModel.timeRemaining)")
-                            .font(.system(size: 22, weight: .black, design: .monospaced))
+                            .font(.system(size: isTimeCritical ? 26 : 22, weight: .black, design: .monospaced))
                             .foregroundColor(isTimeCritical ? .red : .white)
+                            // HATA ÇÖZÜMÜ: Sayı değişimini animasyondan koru (iOS 16+ için numericText, öncesi için id değişikliği)
+                            .contentTransition(.numericText())
+                            .animation(nil, value: viewModel.timeRemaining) // Sayı değişirken animasyon yapma!
+                            
+                            // Kalp atışı efekti (Sadece boyutu etkiler)
+                            .scaleEffect(isTimeCritical ? 1.2 : 1.0)
+                            .animation(isTimeCritical ? Animation.easeInOut(duration: 0.5).repeatForever(autoreverses: true) : .default, value: isTimeCritical)
                     }
                     .frame(width: 55, height: 55)
 
@@ -108,7 +122,6 @@ struct GameView: View {
 
                 // MARK: - 2. Kart Alanı
                 if let card = viewModel.currentCard {
-                    // ModernCardView artık aşağıda tanımlı olduğu için hata vermeyecek
                     InternalModernCardView(card: card)
                         .offset(offset)
                         .rotationEffect(Angle(degrees: Double(offset.width / 12)))
@@ -153,14 +166,28 @@ struct GameView: View {
 
                 // MARK: - 4. Kontrol Butonları
                 HStack(spacing: 30) {
-                    InternalControlButton(icon: "arrow.right.arrow.left", label: "PAS", color: .yellow, isDisabled: viewModel.isPassLimitReached) { viewModel.markPass() }
-                    InternalControlButton(icon: "hand.raised.fill", label: "TABU", color: .red, isLarge: true) { viewModel.markTaboo() }
-                    InternalControlButton(icon: "checkmark", label: "DOĞRU", color: .green) { viewModel.markCorrect() }
+                    // PAS
+                    InternalControlButton(icon: "arrow.right.arrow.left", label: "PAS", color: .yellow, isDisabled: viewModel.isPassLimitReached) {
+                        GameFX.playPass()
+                        viewModel.markPass()
+                    }
+                    
+                    // TABU
+                    InternalControlButton(icon: "hand.raised.fill", label: "TABU", color: .red, isLarge: true) {
+                        GameFX.playTaboo()
+                        viewModel.markTaboo()
+                    }
+                    
+                    // DOĞRU
+                    InternalControlButton(icon: "checkmark", label: "DOĞRU", color: .green) {
+                        GameFX.playCorrect()
+                        viewModel.markCorrect()
+                    }
                 }
                 .padding(.bottom, 60)
             }
 
-            // MARK: - 5. Pause Overlay (Durdurma Ekranı)
+            // MARK: - 5. Pause Overlay
             if viewModel.gameState == .paused {
                 ZStack {
                     Color.black.opacity(0.85)
@@ -193,6 +220,13 @@ struct GameView: View {
                 .zIndex(10)
             }
         }
+        // MARK: - ZAMANLAYICI SES KONTROLÜ
+        .onChange(of: viewModel.timeRemaining) { oldValue, newValue in
+            // Son 10 saniye kala, her saniye "Tik" sesi ve titreşim
+            if newValue <= 10 && newValue > 0 {
+                GameFX.playTensionBeat()
+            }
+        }
     }
 
     private var swipeIndicators: some View {
@@ -206,14 +240,50 @@ struct GameView: View {
     func handleSwipe(width: CGFloat, height: CGFloat) {
         let threshold: CGFloat = 100
         if abs(width) > abs(height) {
-            if width > threshold { viewModel.markCorrect() }
-            else if width < -threshold && !viewModel.isPassLimitReached { viewModel.markPass() }
-        } else if height > threshold { viewModel.markTaboo() }
+            if width > threshold {
+                GameFX.playCorrect()
+                viewModel.markCorrect()
+            }
+            else if width < -threshold && !viewModel.isPassLimitReached {
+                GameFX.playPass()
+                viewModel.markPass()
+            }
+        } else if height > threshold {
+            GameFX.playTaboo()
+            viewModel.markTaboo()
+        }
         offset = .zero
     }
 }
 
-// MARK: - ÖZEL ALT BİLEŞENLER (Çakışmayı önlemek için isimleri güncellendi)
+// MARK: - SES VE TİTREŞİM YÖNETİCİSİ (GameFX)
+struct GameFX {
+    static func playCorrect() {
+        AudioServicesPlaySystemSound(1001)
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+    }
+    
+    static func playTaboo() {
+        AudioServicesPlaySystemSound(1053)
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.error)
+    }
+    
+    static func playPass() {
+        AudioServicesPlaySystemSound(1104)
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+    }
+    
+    static func playTensionBeat() {
+        AudioServicesPlaySystemSound(1103)
+        let generator = UIImpactFeedbackGenerator(style: .rigid)
+        generator.impactOccurred()
+    }
+}
+
+// MARK: - ÖZEL ALT BİLEŞENLER
 
 struct InternalModernCardView: View {
     let card: WordCard
@@ -225,7 +295,7 @@ struct InternalModernCardView: View {
                     .font(.system(size: 14, weight: .black))
                     .foregroundColor(.white.opacity(0.5))
                     .tracking(4)
-                
+               
                 Text(card.word.uppercased())
                     .font(.system(size: 44, weight: .black, design: .rounded))
                     .foregroundColor(.white)
@@ -254,7 +324,7 @@ struct InternalModernCardView: View {
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.red.opacity(0.9))
                     .tracking(3)
-                
+               
                 VStack(spacing: 12) {
                     ForEach(card.forbiddenWords, id: \.self) { word in
                         Text(word.uppercased())
@@ -277,7 +347,7 @@ struct InternalModernCardView: View {
                     .fill(Color.black.opacity(0.65))
                     .background(.ultraThinMaterial)
                     .cornerRadius(40)
-                
+               
                 RoundedRectangle(cornerRadius: 40)
                     .stroke(LinearGradient(colors: [.white.opacity(0.3), .clear], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5)
             }
