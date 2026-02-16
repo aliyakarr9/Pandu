@@ -1,47 +1,8 @@
 import SwiftUI
 
-// MARK: - 1. Kategori Durum Modeli
-enum CategoryStatus {
-    case active      // Ücretsiz ve oynanabilir
-    case premium     // Hazır ama kilitli (Satın al ve Oyna)
-    case event       // 🌙 SÜRELİ ETKİNLİK (Özel Tasarım + Oynanabilir)
-    case comingSoon  // Henüz yapım aşamasında (Gri ve Pasif)
-}
-
+// MARK: - KATEGORİ SEÇİM EKRANI
 struct CategorySelectionView: View {
     @ObservedObject var viewModel: GameViewModel
-    
-    struct CategoryItem: Identifiable {
-        let id = UUID()
-        let title: String
-        let icon: String
-        let color: Color
-        let desc: String
-        let status: CategoryStatus
-        let jsonFileName: String
-    }
-    
-    // Kategoriler Listesi
-    let categories = [
-        // 🌙 RAMAZAN -> EVENT (En Üstte)
-        CategoryItem(title: "Ramazan", icon: "moon.stars.fill", color: .indigo, desc: "İftar, sahur ve manevi değerler.", status: .event, jsonFileName: "ramadan_pack"),
-        
-        CategoryItem(title: "Yeşilçam", icon: "film.fill", color: .orange, desc: "Eski Türk filmleri nostaljisi.", status: .premium, jsonFileName: "yesilcam"),
-
-        CategoryItem(title: "Klasik", icon: "star.fill", color: .purple, desc: "Genel kültür, karışık eğlence.", status: .active, jsonFileName: "words"),
-        
-        CategoryItem(title: "Sinema", icon: "popcorn.fill", color: .red, desc: "Kült filmler ve dünya sineması.", status: .active, jsonFileName: "sinema"),
-        
-        CategoryItem(title: "Tarih", icon: "scroll.fill", color: .brown, desc: "Zaferler ve tarihi olaylar.", status: .active, jsonFileName: "tarih"),
-        
-        CategoryItem(title: "İngilizce", icon: "book.fill", color: .teal, desc: "Yasaklı kelimelerle dil pratiği.", status: .active, jsonFileName: "english_pack"),
-        
-        CategoryItem(title: "Bilim Kurgu", icon: "airplane", color: .blue, desc: "Uzay, gelecek ve teknoloji.", status: .comingSoon, jsonFileName: "bilimkurgu"),
-        
-        CategoryItem(title: "Spor", icon: "figure.soccer", color: .green, desc: "Futbol, basketbol ve efsaneler.", status: .comingSoon, jsonFileName: "spor"),
-        
-        CategoryItem(title: "Müzik", icon: "music.note", color: .pink, desc: "Şarkılar ve sanatçılar.", status: .comingSoon, jsonFileName: "muzik")
-    ]
     
     let columns = [
         GridItem(.flexible(), spacing: 20),
@@ -81,15 +42,12 @@ struct CategorySelectionView: View {
                     
                     // Izgara Yapısı
                     LazyVGrid(columns: columns, spacing: 25) {
-                        ForEach(categories) { category in
+                        ForEach(CategoryPack.allCategories) { category in
                             Button(action: {
                                 switch category.status {
                                 case .active, .event, .premium:
                                     withAnimation {
-                                        viewModel.selectCategory(
-                                            fileName: category.jsonFileName,
-                                            categoryTitle: category.title
-                                        )
+                                        viewModel.selectCategory(category)
                                     }
                                 
                                 case .comingSoon:
@@ -110,9 +68,9 @@ struct CategorySelectionView: View {
     }
 }
 
-// MARK: - 2. PremiumCategoryCard (GELİŞMİŞ TASARIM)
+// MARK: - PremiumCategoryCard (GELİŞMİŞ TASARIM)
 struct PremiumCategoryCard: View {
-    let item: CategorySelectionView.CategoryItem
+    let item: CategoryPack
     
     // Altın Efekti (Premium)
     var premiumGradient: LinearGradient {
@@ -138,18 +96,17 @@ struct PremiumCategoryCard: View {
             RoundedRectangle(cornerRadius: 30)
                 .fill(
                     item.status == .event
-                    ? eventBackground // Özel Event Arka Planı
+                    ? eventBackground
                     : LinearGradient(
                         colors: cardBackgroundColors(),
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
-                // Event için ekstra iç desen (Yıldızlar)
                 .overlay(
                     Group {
                         if item.status == .event {
-                            StarryPattern() // Aşağıdaki özel görünüm
+                            StarryPattern()
                         }
                     }
                 )
@@ -160,7 +117,6 @@ struct PremiumCategoryCard: View {
                             lineWidth: (item.status == .premium || item.status == .event) ? 3 : 2
                         )
                 )
-                // Gölge Efektleri
                 .shadow(
                     color: shadowColor(),
                     radius: (item.status == .premium || item.status == .event) ? 20 : 10,
@@ -187,7 +143,6 @@ struct PremiumCategoryCard: View {
                             Image(systemName: "crown.fill").font(.system(size: 14)).foregroundColor(.yellow)
                         }
                     } else if item.status == .event {
-                        // Event İkonu
                         ZStack {
                             Circle().fill(Color.white.opacity(0.15)).frame(width: 32, height: 32)
                             Image(systemName: "sparkles").font(.system(size: 14)).foregroundColor(.yellow)
@@ -208,7 +163,6 @@ struct PremiumCategoryCard: View {
                     Image(systemName: item.icon)
                         .font(.system(size: 30, weight: .bold))
                         .foregroundColor(item.status == .comingSoon ? .gray : .white)
-                        // Event ise ikon parlasın
                         .shadow(color: item.status == .event ? .white.opacity(0.5) : .clear, radius: 10)
                 }
                 
@@ -255,7 +209,6 @@ struct PremiumCategoryCard: View {
             if item.status == .premium {
                 BadgeView(text: "PREMIUM", background: premiumGradient, textColor: .black)
             } else if item.status == .event {
-                // Etkinlik Rozeti (Daha havalı renkler)
                 BadgeView(
                     text: "ÖZEL ETKİNLİK",
                     background: LinearGradient(colors: [Color(hex: "ff00cc"), Color(hex: "333399")], startPoint: .leading, endPoint: .trailing),
@@ -271,7 +224,7 @@ struct PremiumCategoryCard: View {
         switch item.status {
         case .comingSoon: return [Color.gray.opacity(0.15), Color.gray.opacity(0.05)]
         case .premium: return [item.color.opacity(0.8), item.color.opacity(0.4)]
-        case .event: return [] // Event için yukarıda özel gradient kullandık
+        case .event: return []
         case .active: return [item.color.opacity(0.8), item.color.opacity(0.4)]
         }
     }
@@ -279,7 +232,7 @@ struct PremiumCategoryCard: View {
     func strokeStyle() -> AnyShapeStyle {
         switch item.status {
         case .premium: return AnyShapeStyle(premiumGradient)
-        case .event: return AnyShapeStyle(eventBorder) // ✨ Angular Gradient Çerçeve
+        case .event: return AnyShapeStyle(eventBorder)
         case .comingSoon: return AnyShapeStyle(Color.white.opacity(0.05))
         case .active: return AnyShapeStyle(item.color.opacity(0.8))
         }
@@ -288,26 +241,34 @@ struct PremiumCategoryCard: View {
     func shadowColor() -> Color {
         switch item.status {
         case .premium: return Color.orange.opacity(0.5)
-        case .event: return Color.purple.opacity(0.7) // Mor neon gölge
+        case .event: return Color.purple.opacity(0.7)
         case .active: return item.color.opacity(0.4)
         default: return .clear
         }
     }
 }
 
-// MARK: - Yıldız Deseni (Event İçin Süsleme)
+// MARK: - Yıldız Deseni (Event İçin — Cache'lenmiş Rastgele Değerler)
 struct StarryPattern: View {
+    private let stars: [(size: CGFloat, opacity: Double, x: CGFloat, y: CGFloat)]
+    
+    init() {
+        stars = (0..<10).map { _ in
+            (CGFloat.random(in: 4...10),
+             Double.random(in: 0.1...0.3),
+             CGFloat.random(in: 0...150),
+             CGFloat.random(in: 0...200))
+        }
+    }
+    
     var body: some View {
         GeometryReader { _ in
             ZStack {
-                ForEach(0..<10) { i in
+                ForEach(stars.indices, id: \.self) { i in
                     Image(systemName: "star.fill")
-                        .font(.system(size: CGFloat.random(in: 4...10)))
-                        .foregroundColor(.white.opacity(Double.random(in: 0.1...0.3)))
-                        .offset(
-                            x: CGFloat.random(in: 0...150),
-                            y: CGFloat.random(in: 0...200)
-                        )
+                        .font(.system(size: stars[i].size))
+                        .foregroundColor(.white.opacity(stars[i].opacity))
+                        .offset(x: stars[i].x, y: stars[i].y)
                 }
             }
         }
@@ -315,7 +276,7 @@ struct StarryPattern: View {
     }
 }
 
-// Alt Rozet Bileşeni
+// MARK: - Alt Rozet Bileşeni
 struct BadgeView: View {
     let text: String
     let background: LinearGradient
@@ -338,37 +299,11 @@ struct BadgeView: View {
     }
 }
 
+// MARK: - Buton Stili
 struct ScaleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.95 : 1)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
-    }
-}
-
-// Hex Renk Desteği için Eklenti (Bunu dosyanın en altına ekle)
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3: // RGB (12-bit)
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (1, 1, 1, 0)
-        }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue:  Double(b) / 255,
-            opacity: Double(a) / 255
-        )
     }
 }

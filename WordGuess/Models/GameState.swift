@@ -1,6 +1,6 @@
 import Foundation
 
-enum GameState {
+enum GameState: Equatable {
     case categorySelection // <--- YENİ: Giriş ve Paket Seçim Ekranı
     case idle              // Takım ve Süre Ayarları (HomeView)
     case playing           // Oyun Ekranı

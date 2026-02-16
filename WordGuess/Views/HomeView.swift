@@ -2,17 +2,31 @@ import SwiftUI
 
 struct HomeView: View {
     @ObservedObject var viewModel: GameViewModel
+    
+    /// Seçili kategoriden renk al — yoksa varsayılan mor
+    private var categoryColor: Color {
+        viewModel.selectedCategory?.color ?? .purple
+    }
+    
+    /// Seçili kategoriden ikon al — yoksa varsayılan yıldız
+    private var categoryIcon: String {
+        viewModel.selectedCategory?.icon ?? "star.fill"
+    }
+    
+    /// Seçili kategoriden isim al — yoksa varsayılan "Klasik"
+    private var categoryName: String {
+        viewModel.selectedCategory?.title ?? "Klasik"
+    }
 
     var body: some View {
         ZStack {
             // MARK: - Arka Plan
             Color.black.edgesIgnoringSafeArea(.all)
             
-            // Arka plan ışık huzmeleri
             VStack {
                 HStack {
                     Circle()
-                        .fill(getCategoryColor(name: viewModel.selectedCategoryName).opacity(0.25))
+                        .fill(categoryColor.opacity(0.25))
                         .frame(width: 300, height: 300)
                         .blur(radius: 80)
                         .offset(x: -100, y: -100)
@@ -21,12 +35,11 @@ struct HomeView: View {
                 Spacer()
             }
             
-            // İçeriği Dikeyde Ortalamak için GeometryReader Kullanıyoruz
             GeometryReader { geometry in
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 25) { // Elemanlar arası boşluk
+                    VStack(spacing: 25) {
                         
-                        Spacer() // Üstten iterek ortala
+                        Spacer()
                         
                         // MARK: - 1. KOMPAKT HERO KART
                         Button(action: {
@@ -35,9 +48,9 @@ struct HomeView: View {
                             }
                         }) {
                             CompactHeroCard(
-                                categoryName: viewModel.selectedCategoryName,
-                                color: getCategoryColor(name: viewModel.selectedCategoryName),
-                                icon: getCategoryIcon(name: viewModel.selectedCategoryName)
+                                categoryName: categoryName,
+                                color: categoryColor,
+                                icon: categoryIcon
                             )
                         }
                         .buttonStyle(ScaleButtonStyle())
@@ -63,21 +76,25 @@ struct HomeView: View {
                                 // GÜÇLENDİRİLMİŞ VS ALANI
                                 ZStack {
                                     HStack(spacing: 15) {
-                                        // 1. Takım
-                                        CompetitiveTeamInput(
-                                            color: .purple,
-                                            placeholder: "1. Takım",
-                                            text: $viewModel.teams[0].name,
-                                            alignment: .leading
-                                        )
+                                        // 1. Takım — güvenli erişim
+                                        if viewModel.teams.indices.contains(0) {
+                                            CompetitiveTeamInput(
+                                                color: viewModel.teams[0].color,
+                                                placeholder: "1. Takım",
+                                                text: $viewModel.teams[0].name,
+                                                alignment: .leading
+                                            )
+                                        }
                                         
-                                        // 2. Takım
-                                        CompetitiveTeamInput(
-                                            color: .orange,
-                                            placeholder: "2. Takım",
-                                            text: $viewModel.teams[1].name,
-                                            alignment: .trailing
-                                        )
+                                        // 2. Takım — güvenli erişim
+                                        if viewModel.teams.indices.contains(1) {
+                                            CompetitiveTeamInput(
+                                                color: viewModel.teams[1].color,
+                                                placeholder: "2. Takım",
+                                                text: $viewModel.teams[1].name,
+                                                alignment: .trailing
+                                            )
+                                        }
                                     }
                                     
                                     // Ortadaki VS
@@ -128,7 +145,10 @@ struct HomeView: View {
                                         color: .blue,
                                         value: Binding(
                                             get: { Double(viewModel.settings.roundTime) },
-                                            set: { viewModel.settings.roundTime = Int($0) }
+                                            set: {
+                                                viewModel.settings.roundTime = Int($0)
+                                                viewModel.saveSettings()
+                                            }
                                         ),
                                         range: 30...120,
                                         step: 10
@@ -141,7 +161,10 @@ struct HomeView: View {
                                         color: .green,
                                         value: Binding(
                                             get: { Double(viewModel.settings.targetScore) },
-                                            set: { viewModel.settings.targetScore = Int($0) }
+                                            set: {
+                                                viewModel.settings.targetScore = Int($0)
+                                                viewModel.saveSettings()
+                                            }
                                         ),
                                         range: 10...100,
                                         step: 5
@@ -157,6 +180,7 @@ struct HomeView: View {
                                             set: { val in
                                                 if val > 10 { viewModel.settings.maxPassCount = -1 }
                                                 else { viewModel.settings.maxPassCount = Int(val) }
+                                                viewModel.saveSettings()
                                             }
                                         ),
                                         range: 0...11,
@@ -190,7 +214,7 @@ struct HomeView: View {
                                 .padding(.vertical, 20)
                                 .background(
                                     LinearGradient(
-                                        colors: [getCategoryColor(name: viewModel.selectedCategoryName), getCategoryColor(name: viewModel.selectedCategoryName).opacity(0.7)],
+                                        colors: [categoryColor, categoryColor.opacity(0.7)],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
@@ -200,52 +224,20 @@ struct HomeView: View {
                                     RoundedRectangle(cornerRadius: 25)
                                         .stroke(Color.white.opacity(0.25), lineWidth: 1)
                                 )
-                                .shadow(color: getCategoryColor(name: viewModel.selectedCategoryName).opacity(0.4), radius: 15, y: 8)
+                                .shadow(color: categoryColor.opacity(0.4), radius: 15, y: 8)
                         }
                         .padding(.horizontal, 20)
                         
-                        Spacer() // Alttan iterek ortala
+                        Spacer()
                     }
-                    .frame(minHeight: geometry.size.height) // İçeriğin en az ekran boyu kadar olmasını sağlar
+                    .frame(minHeight: geometry.size.height)
                 }
             }
         }
     }
-    
-    // YARDIMCI FONKSİYONLAR
-    func getCategoryColor(name: String) -> Color {
-        switch name {
-                case "Klasik": return .purple
-                case "Sinema": return .red
-                case "Tarih": return .brown
-                case "Yeşilçam": return .orange
-                case "Bilim Kurgu": return .blue
-                case "Spor": return .green
-                case "Müzik": return .pink
-                // EKLENEN KISIMLAR:
-                case "Ramazan": return .indigo
-                case "İngilizce": return .teal
-                default: return .purple
-        }
-    }
-    
-    func getCategoryIcon(name: String) -> String {
-        switch name {
-                case "Klasik": return "star.fill"
-                case "Sinema": return "popcorn.fill"
-                case "Tarih": return "scroll.fill"
-                case "Yeşilçam": return "film.fill"
-                case "Bilim Kurgu": return "rocket"
-                case "Spor": return "figure.soccer"
-                case "Müzik": return "music.note"
-                case "Ramazan": return "moon.stars.fill"
-                case "İngilizce": return "book.fill"
-                default: return "star.fill"
-        }
-    }
 }
 
-// MARK: - YENİ REKABETÇİ TAKIM GİRİŞİ (AYNI KALDI)
+// MARK: - REKABETÇİ TAKIM GİRİŞİ
 struct CompetitiveTeamInput: View {
     let color: Color
     let placeholder: String
@@ -254,7 +246,6 @@ struct CompetitiveTeamInput: View {
     
     var body: some View {
         ZStack(alignment: alignment == .leading ? .leading : .trailing) {
-            // Arka Plan Kartı
             RoundedRectangle(cornerRadius: 25)
                 .fill(
                     LinearGradient(
@@ -275,7 +266,6 @@ struct CompetitiveTeamInput: View {
                         )
                 )
             
-            // İçerik
             VStack(alignment: alignment, spacing: 6) {
                 Text(placeholder.uppercased())
                     .font(.system(size: 11, weight: .bold))
@@ -307,7 +297,7 @@ struct CompetitiveTeamInput: View {
     }
 }
 
-// MARK: - KOMPAKT HERO KART (AYNI KALDI)
+// MARK: - KOMPAKT HERO KART
 struct CompactHeroCard: View {
     let categoryName: String
     let color: Color
@@ -315,7 +305,6 @@ struct CompactHeroCard: View {
     
     var body: some View {
         HStack(spacing: 15) {
-            // İkon Alanı
             ZStack {
                 Circle()
                     .fill(Color.black.opacity(0.25))
@@ -325,7 +314,6 @@ struct CompactHeroCard: View {
                     .foregroundColor(.white)
             }
             
-            // Başlık Alanı
             VStack(alignment: .leading, spacing: 2) {
                 Text("SEÇİLİ PAKET")
                     .font(.system(size: 10, weight: .bold))
@@ -335,14 +323,13 @@ struct CompactHeroCard: View {
                 Text(categoryName.uppercased())
                     .font(.system(size: 28, weight: .black, design: .rounded))
                     .foregroundColor(.white)
-                    .lineLimit(1) // Tek satırda kalmaya zorla
-                    .minimumScaleFactor(0.5) // Gerekirse fontu %50 küçült (Bu sayede sığar)
-                    .padding(.trailing, 5) // Butonla çakışmaması için sağ boşluk
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .padding(.trailing, 5)
             }
             
             Spacer()
             
-            // Değiştir Butonu
             HStack(spacing: 4) {
                 Text("Değiştir")
                 Image(systemName: "chevron.right")
@@ -364,7 +351,7 @@ struct CompactHeroCard: View {
     }
 }
 
-// MARK: - SETTINGS SLIDER (AYNI KALDI)
+// MARK: - SETTINGS SLIDER
 struct SettingsSliderRow: View {
     let title: String
     let icon: String

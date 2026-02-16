@@ -52,7 +52,7 @@ struct CardView: View {
                     .tracking(3)
                 
                 VStack(spacing: 14) {
-                    ForEach(card.forbiddenWords, id: \.self) { word in
+                    ForEach(Array(card.forbiddenWords.enumerated()), id: \.offset) { _, word in
                         Text(word.uppercased())
                             .font(.system(size: 28, weight: .heavy, design: .rounded))
                             .foregroundColor(.white)

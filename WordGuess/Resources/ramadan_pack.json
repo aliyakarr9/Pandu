@@ -211,7 +211,7 @@
       { "id": "rmz210", "word": "HELALLİK", "forbiddenWords": ["İstemek", "Hakkını", "Ölüm", "Bayram", "Vermek"], "difficulty": "easy" },
       { "id": "rmz211", "word": "İMSAKİYE", "forbiddenWords": ["Takvim", "Saat", "Ezan", "İftar", "Sahur"], "difficulty": "easy" },
       { "id": "rmz212", "word": "MUKABELE", "forbiddenWords": ["Kuran", "Okumak", "Takip", "Cami", "Hafız"], "difficulty": "hard" },
-      { "id": "rmz213", "word": "RAMAZAN KOLİSİ", "forbiddenWords": ["Yardım", "Ergzak", "Kutu", "Market", "Belediye"], "difficulty": "easy" },
+      { "id": "rmz213", "word": "RAMAZAN KOLİSİ", "forbiddenWords": ["Yardım", "Erzak", "Kutu", "Market", "Belediye"], "difficulty": "easy" },
       { "id": "rmz214", "word": "İFTAR ÇADIRI", "forbiddenWords": ["Yemek", "Belediye", "Bedava", "Sıra", "Meydan"], "difficulty": "easy" },
       { "id": "rmz215", "word": "BAYRAM NAMAZI", "forbiddenWords": ["Sabah", "Cami", "Hutbe", "Erkek", "Yılda İki"], "difficulty": "easy" },
       { "id": "rmz216", "word": "BAYRAMLAŞMA", "forbiddenWords": ["El Öpmek", "Sarılmak", "Ziyaret", "Akraba", "Toplanmak"], "difficulty": "easy" },
