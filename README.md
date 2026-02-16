@@ -1,4 +1,4 @@
-# 🚀 WordGuess (Kelime Tahmin) - iOS
+# 🚀 Pandu - Kelime Tahmin Oyunu - iOS
 
 ![Platform](https://img.shields.io/badge/Platform-iOS%2016%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9-orange)
