@@ -215,27 +215,32 @@ struct HomeView: View {
     // YARDIMCI FONKSİYONLAR
     func getCategoryColor(name: String) -> Color {
         switch name {
-        case "Klasik": return .purple
-        case "Sinema": return .red
-        case "Tarih": return .brown
-        case "Yeşilçam": return .orange
-        case "Bilim Kurgu": return .blue
-        case "Spor": return .green
-        case "Müzik": return .pink
-        default: return .purple
+                case "Klasik": return .purple
+                case "Sinema": return .red
+                case "Tarih": return .brown
+                case "Yeşilçam": return .orange
+                case "Bilim Kurgu": return .blue
+                case "Spor": return .green
+                case "Müzik": return .pink
+                // EKLENEN KISIMLAR:
+                case "Ramazan": return .indigo
+                case "İngilizce": return .teal
+                default: return .purple
         }
     }
     
     func getCategoryIcon(name: String) -> String {
         switch name {
-        case "Klasik": return "star.fill"
-        case "Sinema": return "popcorn.fill"
-        case "Tarih": return "scroll.fill"
-        case "Yeşilçam": return "film.fill"
-        case "Bilim Kurgu": return "rocket"
-        case "Spor": return "figure.soccer"
-        case "Müzik": return "music.note"
-        default: return "star.fill"
+                case "Klasik": return "star.fill"
+                case "Sinema": return "popcorn.fill"
+                case "Tarih": return "scroll.fill"
+                case "Yeşilçam": return "film.fill"
+                case "Bilim Kurgu": return "rocket"
+                case "Spor": return "figure.soccer"
+                case "Müzik": return "music.note"
+                case "Ramazan": return "moon.stars.fill"
+                case "İngilizce": return "book.fill"
+                default: return "star.fill"
         }
     }
 }
@@ -310,6 +315,7 @@ struct CompactHeroCard: View {
     
     var body: some View {
         HStack(spacing: 15) {
+            // İkon Alanı
             ZStack {
                 Circle()
                     .fill(Color.black.opacity(0.25))
@@ -319,20 +325,24 @@ struct CompactHeroCard: View {
                     .foregroundColor(.white)
             }
             
+            // Başlık Alanı
             VStack(alignment: .leading, spacing: 2) {
                 Text("SEÇİLİ PAKET")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.white.opacity(0.6))
                     .tracking(1)
+                
                 Text(categoryName.uppercased())
                     .font(.system(size: 28, weight: .black, design: .rounded))
                     .foregroundColor(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .lineLimit(1) // Tek satırda kalmaya zorla
+                    .minimumScaleFactor(0.5) // Gerekirse fontu %50 küçült (Bu sayede sığar)
+                    .padding(.trailing, 5) // Butonla çakışmaması için sağ boşluk
             }
             
             Spacer()
             
+            // Değiştir Butonu
             HStack(spacing: 4) {
                 Text("Değiştir")
                 Image(systemName: "chevron.right")

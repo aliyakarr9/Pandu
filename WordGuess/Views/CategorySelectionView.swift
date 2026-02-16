@@ -25,20 +25,21 @@ struct CategorySelectionView: View {
     let categories = [
         // 🌙 RAMAZAN -> EVENT (En Üstte)
         CategoryItem(title: "Ramazan", icon: "moon.stars.fill", color: .indigo, desc: "İftar, sahur ve manevi değerler.", status: .event, jsonFileName: "ramadan_pack"),
+        
+        CategoryItem(title: "Yeşilçam", icon: "film.fill", color: .orange, desc: "Eski Türk filmleri nostaljisi.", status: .premium, jsonFileName: "yesilcam"),
 
         CategoryItem(title: "Klasik", icon: "star.fill", color: .purple, desc: "Genel kültür, karışık eğlence.", status: .active, jsonFileName: "words"),
         
         CategoryItem(title: "Sinema", icon: "popcorn.fill", color: .red, desc: "Kült filmler ve dünya sineması.", status: .active, jsonFileName: "sinema"),
         
-        CategoryItem(title: "Yeşilçam", icon: "film.fill", color: .orange, desc: "Eski Türk filmleri nostaljisi.", status: .premium, jsonFileName: "yesilcam"),
-        
         CategoryItem(title: "Tarih", icon: "scroll.fill", color: .brown, desc: "Zaferler ve tarihi olaylar.", status: .active, jsonFileName: "tarih"),
+        
         CategoryItem(title: "İngilizce", icon: "book.fill", color: .teal, desc: "Yasaklı kelimelerle dil pratiği.", status: .active, jsonFileName: "english_pack"),
         
-
-        
         CategoryItem(title: "Bilim Kurgu", icon: "airplane", color: .blue, desc: "Uzay, gelecek ve teknoloji.", status: .comingSoon, jsonFileName: "bilimkurgu"),
+        
         CategoryItem(title: "Spor", icon: "figure.soccer", color: .green, desc: "Futbol, basketbol ve efsaneler.", status: .comingSoon, jsonFileName: "spor"),
+        
         CategoryItem(title: "Müzik", icon: "music.note", color: .pink, desc: "Şarkılar ve sanatçılar.", status: .comingSoon, jsonFileName: "muzik")
     ]
     
@@ -83,15 +84,14 @@ struct CategorySelectionView: View {
                         ForEach(categories) { category in
                             Button(action: {
                                 switch category.status {
-                                case .active, .event:
+                                case .active, .event, .premium:
                                     withAnimation {
                                         viewModel.selectCategory(
                                             fileName: category.jsonFileName,
                                             categoryTitle: category.title
                                         )
                                     }
-                                case .premium:
-                                    print("Premium satın alma: \(category.title)")
+                                
                                 case .comingSoon:
                                     break
                                 }
@@ -119,7 +119,7 @@ struct PremiumCategoryCard: View {
         LinearGradient(colors: [.yellow, .orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
     
-    // 🌙 Etkinlik Arka Planı (Mistik Gece)
+    // 🌙 Etkinlik Arka Planı
     var eventBackground: LinearGradient {
         LinearGradient(colors: [Color(hex: "1a0b2e"), Color(hex: "2d1b4e")], startPoint: .top, endPoint: .bottom)
     }
