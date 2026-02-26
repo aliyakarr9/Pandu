@@ -1,6 +1,5 @@
 import SwiftUI
 
-// MARK: - KATEGORİ SEÇİM EKRANI
 struct CategorySelectionView: View {
     @ObservedObject var viewModel: GameViewModel
     
@@ -13,7 +12,6 @@ struct CategorySelectionView: View {
         ZStack {
             Color.black.edgesIgnoringSafeArea(.all)
             
-            // Arka plan ışık efekti
             VStack {
                 Circle()
                     .fill(Color.purple.opacity(0.15))
@@ -25,7 +23,6 @@ struct CategorySelectionView: View {
             
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 30) {
-                    // Başlık Alanı
                     VStack(alignment: .leading, spacing: 10) {
                         Text("PAKET SEÇ")
                             .font(.system(size: 14, weight: .bold))
@@ -40,7 +37,6 @@ struct CategorySelectionView: View {
                     .padding(.top, 60)
                     .padding(.horizontal, 25)
                     
-                    // Izgara Yapısı
                     LazyVGrid(columns: columns, spacing: 25) {
                         ForEach(CategoryPack.allCategories) { category in
                             Button(action: {
@@ -68,21 +64,17 @@ struct CategorySelectionView: View {
     }
 }
 
-// MARK: - PremiumCategoryCard (GELİŞMİŞ TASARIM)
 struct PremiumCategoryCard: View {
     let item: CategoryPack
     
-    // Altın Efekti (Premium)
     var premiumGradient: LinearGradient {
         LinearGradient(colors: [.yellow, .orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
     
-    // 🌙 Etkinlik Arka Planı
     var eventBackground: LinearGradient {
         LinearGradient(colors: [Color(hex: "1a0b2e"), Color(hex: "2d1b4e")], startPoint: .top, endPoint: .bottom)
     }
     
-    // ✨ Etkinlik Çerçevesi (Altın ve Mor Karışımı - Parlak)
     var eventBorder: AngularGradient {
         AngularGradient(
             gradient: Gradient(colors: [.orange, .purple, .yellow, .indigo, .orange]),
@@ -92,7 +84,6 @@ struct PremiumCategoryCard: View {
     
     var body: some View {
         ZStack {
-            // MARK: - KART ARKA PLANI
             RoundedRectangle(cornerRadius: 30)
                 .fill(
                     item.status == .event
@@ -124,9 +115,7 @@ struct PremiumCategoryCard: View {
                     y: 10
                 )
             
-            // MARK: - İÇERİK
             VStack(spacing: 0) {
-                // ÜST BİLGİ ALANI
                 HStack {
                     Spacer()
                     if item.title == "Klasik" {
@@ -154,7 +143,6 @@ struct PremiumCategoryCard: View {
                 
                 Spacer()
                 
-                // ORTALANMIŞ İKON
                 ZStack {
                     Circle()
                         .fill(item.status == .active || item.status == .premium || item.status == .event ? Color.black.opacity(0.3) : Color.white.opacity(0.05))
@@ -168,7 +156,6 @@ struct PremiumCategoryCard: View {
                 
                 Spacer()
                 
-                // BAŞLIK VE AÇIKLAMA
                 VStack(spacing: 6) {
                     Text(item.title.uppercased())
                         .font(.system(size: 22, weight: .black, design: .rounded))
@@ -186,7 +173,6 @@ struct PremiumCategoryCard: View {
                 .padding(.bottom, 25)
             }
             
-            // MARK: - YAKINDA KATMANI
             if item.status == .comingSoon {
                 RoundedRectangle(cornerRadius: 30)
                     .fill(.ultraThinMaterial)
@@ -205,9 +191,8 @@ struct PremiumCategoryCard: View {
                 }
             }
             
-            // MARK: - ALT ETİKETLER
             if item.status == .premium {
-                BadgeView(text: "PREMIUM", background: premiumGradient, textColor: .black)
+                BadgeView(text: "GURME", background: premiumGradient, textColor: .black)
             } else if item.status == .event {
                 BadgeView(
                     text: "ÖZEL ETKİNLİK",
@@ -219,7 +204,6 @@ struct PremiumCategoryCard: View {
         .frame(height: 240)
     }
     
-    // Renk Yardımcıları
     func cardBackgroundColors() -> [Color] {
         switch item.status {
         case .comingSoon: return [Color.gray.opacity(0.15), Color.gray.opacity(0.05)]
@@ -248,7 +232,6 @@ struct PremiumCategoryCard: View {
     }
 }
 
-// MARK: - Yıldız Deseni (Event İçin — Cache'lenmiş Rastgele Değerler)
 struct StarryPattern: View {
     private let stars: [(size: CGFloat, opacity: Double, x: CGFloat, y: CGFloat)]
     
@@ -276,7 +259,6 @@ struct StarryPattern: View {
     }
 }
 
-// MARK: - Alt Rozet Bileşeni
 struct BadgeView: View {
     let text: String
     let background: LinearGradient
@@ -299,7 +281,6 @@ struct BadgeView: View {
     }
 }
 
-// MARK: - Buton Stili
 struct ScaleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label

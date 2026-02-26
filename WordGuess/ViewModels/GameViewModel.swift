@@ -3,11 +3,9 @@ import Combine
 import SwiftUI
 import UIKit
 
-// MARK: - ANA OYUN ViewModel
 @MainActor
 class GameViewModel: ObservableObject {
     
-    // MARK: - Published Properties
     @Published var teams: [Team] = [
         Team(name: "1. Takım", color: .purple),
         Team(name: "2. Takım", color: .orange)
@@ -21,21 +19,18 @@ class GameViewModel: ObservableObject {
     @Published var settings: GameSettings = GameSettings()
     @Published var selectedCategory: CategoryPack?
     @Published var isDeckEmpty: Bool = false
+    @Published var showRulesCard: Bool = false
     
-    // MARK: - Private State
     private var deck: [WordCard] = []
     private var usedCards: [WordCard] = []
     private var timerCancellable: AnyCancellable?
-    private var isProcessingAction: Bool = false  // Hızlı tıklama koruması
+    private var isProcessingAction: Bool = false
     
-    // MARK: - UserDefaults Keys
     private enum DefaultsKey {
         static let roundTime = "settings_roundTime"
         static let targetScore = "settings_targetScore"
         static let maxPassCount = "settings_maxPassCount"
     }
-    
-    // MARK: - Computed Properties
     
     var currentTeam: Team {
         guard teams.indices.contains(currentTeamIndex) else {
@@ -49,13 +44,9 @@ class GameViewModel: ObservableObject {
         return passesUsed >= settings.maxPassCount
     }
     
-    // MARK: - Init
-    
     init() {
         loadSavedSettings()
     }
-    
-    // MARK: - Kategori Seçimi
     
     func selectCategory(_ category: CategoryPack) {
         self.selectedCategory = category
@@ -72,8 +63,6 @@ class GameViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Deck Yükleme (Güvenli)
-    
     func loadDeck(fileName: String) {
         let file = fileName.hasSuffix(".json") ? fileName : "\(fileName).json"
         deck = DataLoader.shared.loadCards(file)
@@ -82,10 +71,7 @@ class GameViewModel: ObservableObject {
         isDeckEmpty = deck.isEmpty
     }
     
-    // MARK: - Game Flow
-    
     func startGame() {
-        // Boş takım isimlerini varsayılana çevir
         for index in teams.indices {
             if teams[index].name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 teams[index].name = "\(index + 1). Takım"
@@ -93,6 +79,7 @@ class GameViewModel: ObservableObject {
             teams[index].score = 0
         }
         currentTeamIndex = 0
+        showRulesCard = true
         gameState = .betweenRounds
     }
     
@@ -146,8 +133,6 @@ class GameViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Game Logic
-    
     func nextCard() {
         if deck.isEmpty {
             if usedCards.isEmpty {
@@ -168,7 +153,7 @@ class GameViewModel: ObservableObject {
         isProcessingAction = true
         defer { isProcessingAction = false }
         
-        roundScore += 1
+        roundScore += currentCard?.pointValue ?? 1
         if let card = currentCard {
             usedCards.append(card)
         }
@@ -218,8 +203,6 @@ class GameViewModel: ObservableObject {
         nextCard()
     }
     
-    // MARK: - Timer
-    
     private func startTimer() {
         timerCancellable = Timer.publish(every: 1, on: .main, in: .common)
             .autoconnect()
@@ -233,8 +216,6 @@ class GameViewModel: ObservableObject {
             }
     }
     
-    // MARK: - Win Check
-    
     private func checkWinCondition() -> Bool {
         if teams.contains(where: { $0.score >= settings.targetScore }) {
             gameState = .gameOver
@@ -242,8 +223,6 @@ class GameViewModel: ObservableObject {
         }
         return false
     }
-    
-    // MARK: - UserDefaults (Ayarları Kaydet / Yükle)
     
     func saveSettings() {
         UserDefaults.standard.set(settings.roundTime, forKey: DefaultsKey.roundTime)
@@ -254,7 +233,6 @@ class GameViewModel: ObservableObject {
     private func loadSavedSettings() {
         let defaults = UserDefaults.standard
         
-        // Sadece daha önce kaydedilmişse yükle, yoksa default değerleri kullan
         if defaults.object(forKey: DefaultsKey.roundTime) != nil {
             settings.roundTime = defaults.integer(forKey: DefaultsKey.roundTime)
         }

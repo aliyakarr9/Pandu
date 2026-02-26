@@ -22,18 +22,15 @@ class DataLoader {
 
     private init() {}
 
-    /// Güvenli yükleme — başarısız olursa boş dizi döner, crash yapmaz.
     func loadCards(_ filename: String) -> [WordCard] {
         switch loadSafe(filename) as Result<[WordCard], DataLoaderError> {
         case .success(let cards):
             return cards
-        case .failure(let error):
-            print("⚠️ DataLoader: \(error.localizedDescription)")
+        case .failure:
             return []
         }
     }
     
-    /// Generic güvenli yükleme — Result tipi döner.
     func loadSafe<T: Decodable>(_ filename: String) -> Result<T, DataLoaderError> {
         let file = filename.hasSuffix(".json") ? filename : "\(filename).json"
         

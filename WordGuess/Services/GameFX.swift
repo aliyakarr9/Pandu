@@ -1,9 +1,6 @@
 import AudioToolbox
 import UIKit
 
-// MARK: - SES VE TİTREŞİM YÖNETİCİSİ
-/// Tüm ses ve haptic feedback işlemleri için tek kaynak noktası.
-/// System Sound ID'leri kullanır — harici ses dosyası gerektirmez.
 @MainActor
 struct GameFX {
     

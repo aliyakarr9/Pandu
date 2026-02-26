@@ -1,6 +1,5 @@
 import SwiftUI
 
-// MARK: - Ortak Kontrol Butonu
 struct ControlButton: View {
     let icon: String
     let label: String
@@ -34,7 +33,6 @@ struct ControlButton: View {
     }
 }
 
-// MARK: - Ortak Swipe Gösterge İkonu
 struct SwipeIndicatorIcon: View {
     let icon: String
     let color: Color
@@ -47,7 +45,6 @@ struct SwipeIndicatorIcon: View {
     }
 }
 
-// MARK: - Hex Renk Desteği
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

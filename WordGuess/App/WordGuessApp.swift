@@ -1,6 +1,5 @@
 import SwiftUI
 
-// MARK: - ANA UYGULAMA (APP ENTRY)
 @main
 struct WordGuessApp: App {
     @StateObject private var viewModel = GameViewModel()
@@ -8,8 +7,6 @@ struct WordGuessApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                // Kalıcı siyah arka plan — geçişler sırasında beyaz pencere arkaplanının
-                // görünmesini engeller
                 Color.black
                     .ignoresSafeArea()
                 

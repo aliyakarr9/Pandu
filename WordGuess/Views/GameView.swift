@@ -6,7 +6,6 @@ struct GameView: View {
     @State private var offset: CGSize = .zero
     @State private var showQuitAlert: Bool = false
     
-    // Son 10 saniye kontrolü
     private var isTimeCritical: Bool { viewModel.timeRemaining <= 10 }
     
     private var progress: Double {
@@ -16,7 +15,6 @@ struct GameView: View {
 
     var body: some View {
         ZStack {
-            // MARK: - Arka Plan
             LinearGradient(
                 gradient: Gradient(colors: [
                     viewModel.currentTeam.color.opacity(0.4),
@@ -29,9 +27,7 @@ struct GameView: View {
             .edgesIgnoringSafeArea(.all)
 
             VStack(spacing: 0) {
-                // MARK: - 1. Üst Panel
                 HStack(spacing: 15) {
-                    // Çıkış Butonu
                     Button(action: { showQuitAlert = true }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .bold))
@@ -49,7 +45,6 @@ struct GameView: View {
                         )
                     }
 
-                    // DURDURMA BUTONU
                     Button(action: {
                         withAnimation { viewModel.pauseGame() }
                     }) {
@@ -63,7 +58,6 @@ struct GameView: View {
 
                     Spacer()
 
-                    // MARK: DİNAMİK SAYAÇ
                     ZStack {
                         Circle()
                             .stroke(Color.white.opacity(0.1), lineWidth: 5)
@@ -89,7 +83,6 @@ struct GameView: View {
 
                     Spacer()
 
-                    // Takım Bilgisi ve Skor
                     VStack(alignment: .trailing, spacing: 1) {
                         Text(viewModel.currentTeam.name.uppercased())
                             .font(.system(size: 10, weight: .black))
@@ -114,9 +107,7 @@ struct GameView: View {
 
                 Spacer(minLength: 20)
 
-                // MARK: - 2. Kart Alanı
                 if viewModel.isDeckEmpty {
-                    // Boş deste uyarısı
                     VStack(spacing: 16) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.system(size: 50))
@@ -129,6 +120,7 @@ struct GameView: View {
                     .padding(40)
                 } else if let card = viewModel.currentCard {
                     CardView(card: card)
+                        .animation(.easeInOut(duration: 0.3), value: card.id)
                         .offset(offset)
                         .rotationEffect(Angle(degrees: Double(offset.width / 12)))
                         .gesture(
@@ -152,7 +144,6 @@ struct GameView: View {
                     ProgressView().tint(.white).scaleEffect(1.5)
                 }
 
-                // MARK: - 3. Pas Hakkı Bilgisi
                 if viewModel.settings.maxPassCount >= 0 {
                     HStack(spacing: 6) {
                         Image(systemName: "bolt.fill")
@@ -170,7 +161,6 @@ struct GameView: View {
 
                 Spacer(minLength: 20)
 
-                // MARK: - 4. Kontrol Butonları
                 HStack(spacing: 30) {
                     ControlButton(icon: "arrow.right.arrow.left", label: "PAS", color: .yellow, isDisabled: viewModel.isPassLimitReached) {
                         viewModel.markPass()
@@ -187,7 +177,6 @@ struct GameView: View {
                 .padding(.bottom, 60)
             }
 
-            // MARK: - 5. Pause Overlay
             if viewModel.gameState == .paused {
                 ZStack {
                     Color.black.opacity(0.85)
@@ -220,7 +209,6 @@ struct GameView: View {
                 .zIndex(10)
             }
         }
-        // MARK: - ZAMANLAYICI SES KONTROLÜ
         .onChange(of: viewModel.timeRemaining) { oldValue, newValue in
             if newValue <= 10 && newValue > 0 {
                 GameFX.playTensionBeat()
@@ -228,7 +216,6 @@ struct GameView: View {
         }
     }
 
-    // MARK: - Swipe Göstergeleri
     private var swipeIndicators: some View {
         ZStack {
             if offset.width > 60 { SwipeIndicatorIcon(icon: "checkmark.circle.fill", color: .green) }
@@ -237,7 +224,6 @@ struct GameView: View {
         }
     }
 
-    // MARK: - Swipe İşleme
     func handleSwipe(width: CGFloat, height: CGFloat) {
         let threshold: CGFloat = 100
         if abs(width) > abs(height) {

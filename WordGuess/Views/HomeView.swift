@@ -3,24 +3,20 @@ import SwiftUI
 struct HomeView: View {
     @ObservedObject var viewModel: GameViewModel
     
-    /// Seçili kategoriden renk al — yoksa varsayılan mor
     private var categoryColor: Color {
         viewModel.selectedCategory?.color ?? .purple
     }
     
-    /// Seçili kategoriden ikon al — yoksa varsayılan yıldız
     private var categoryIcon: String {
         viewModel.selectedCategory?.icon ?? "star.fill"
     }
     
-    /// Seçili kategoriden isim al — yoksa varsayılan "Klasik"
     private var categoryName: String {
         viewModel.selectedCategory?.title ?? "Klasik"
     }
 
     var body: some View {
         ZStack {
-            // MARK: - Arka Plan
             Color.black.edgesIgnoringSafeArea(.all)
             
             VStack {
@@ -41,7 +37,6 @@ struct HomeView: View {
                         
                         Spacer()
                         
-                        // MARK: - 1. KOMPAKT HERO KART
                         Button(action: {
                             withAnimation {
                                 viewModel.returnToCategories()
@@ -56,10 +51,8 @@ struct HomeView: View {
                         .buttonStyle(ScaleButtonStyle())
                         .padding(.horizontal, 20)
 
-                        // MARK: - 2. BÜTÜNLEŞİK HAZIRLIK PANELİ
                         VStack(spacing: 0) {
                             
-                            // --- TAKIMLAR BÖLÜMÜ ---
                             VStack(alignment: .leading, spacing: 15) {
                                 HStack {
                                     Image(systemName: "flag.2.crossed.fill")
@@ -73,10 +66,8 @@ struct HomeView: View {
                                 .padding(.leading, 10)
                                 .padding(.top, 5)
                                 
-                                // GÜÇLENDİRİLMİŞ VS ALANI
                                 ZStack {
                                     HStack(spacing: 15) {
-                                        // 1. Takım — güvenli erişim
                                         if viewModel.teams.indices.contains(0) {
                                             CompetitiveTeamInput(
                                                 color: viewModel.teams[0].color,
@@ -86,7 +77,6 @@ struct HomeView: View {
                                             )
                                         }
                                         
-                                        // 2. Takım — güvenli erişim
                                         if viewModel.teams.indices.contains(1) {
                                             CompetitiveTeamInput(
                                                 color: viewModel.teams[1].color,
@@ -97,7 +87,6 @@ struct HomeView: View {
                                         }
                                     }
                                     
-                                    // Ortadaki VS
                                     Text("VS")
                                         .font(.system(size: 32, weight: .black, design: .rounded))
                                         .italic()
@@ -115,7 +104,6 @@ struct HomeView: View {
                             }
                             .padding(20)
                             
-                            // Ayırıcı Çizgi
                             Rectangle()
                                 .fill(LinearGradient(
                                     colors: [.clear, .white.opacity(0.15), .clear],
@@ -125,7 +113,6 @@ struct HomeView: View {
                                 .frame(height: 1)
                                 .padding(.horizontal, 20)
                             
-                            // --- AYARLAR BÖLÜMÜ ---
                             VStack(alignment: .leading, spacing: 15) {
                                 HStack {
                                     Image(systemName: "slider.horizontal.3")
@@ -201,7 +188,6 @@ struct HomeView: View {
                         )
                         .padding(.horizontal, 20)
 
-                        // MARK: - 3. BAŞLAT BUTONU
                         Button(action: {
                             withAnimation {
                                 viewModel.startGame()
@@ -237,7 +223,6 @@ struct HomeView: View {
     }
 }
 
-// MARK: - REKABETÇİ TAKIM GİRİŞİ
 struct CompetitiveTeamInput: View {
     let color: Color
     let placeholder: String
@@ -297,7 +282,6 @@ struct CompetitiveTeamInput: View {
     }
 }
 
-// MARK: - KOMPAKT HERO KART
 struct CompactHeroCard: View {
     let categoryName: String
     let color: Color
@@ -351,7 +335,6 @@ struct CompactHeroCard: View {
     }
 }
 
-// MARK: - SETTINGS SLIDER
 struct SettingsSliderRow: View {
     let title: String
     let icon: String
