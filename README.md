@@ -32,11 +32,11 @@
 
 | Paket Seçimi | Oyun Ayarları | Oyun Ekranı |
 |---|---|---|
-| <img src="Screenshots/paketekrani.jpeg" width="220"> | <img src="Screenshots/ayarekrani.jpeg" width="220"> | <img src="Screenshots/oyunekrani.jpeg" width="220"> |
+| <img src="Screenshots/paketekrani.jpg" width="220"> | <img src="Screenshots/ayarekrani.jpg" width="220"> | <img src="Screenshots/oyunekrani.jpg" width="220"> |
 
 | Skor Tablosu | Şampiyon Ekranı |
 |---|---|
-| <img src="Screenshots/skorekrani.jpeg" width="220"> | <img src="Screenshots/sampiyonekrani.jpeg" width="220"> |
+| <img src="Screenshots/skorekrani.jpg" width="220"> | <img src="Screenshots/sampiyonekrani.jpg" width="220"> |
 
 ---
 
