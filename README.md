@@ -61,7 +61,7 @@ Projeyi kendi ortamınızda incelemek veya geliştirmek için aşağıdaki adım
 
 1.  Bu depoyu bilgisayarınıza klonlayın:
     ```bash
-    git clone https://github.com/aliyakarr9/WordGuess.git
+    git clone https://github.com/aliyakarr9/Pandu.git
     ```
 2.  İndirdiğiniz klasördeki `WordGuess.xcodeproj` dosyasını çift tıklayarak **Xcode** (16 veya üstü) üzerinde açın.
 3.  Üst menüden uygun bir **Simülatör** veya bilgisayarınıza bağlı gerçek bir **iOS cihazı** seçin.
