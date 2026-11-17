@@ -1,72 +1,58 @@
 import SwiftUI
 
-struct ControlButton: View {
-    let icon: String
+/// Basıldığı anda hafifçe küçülen düğme; geri bildirim parmak inerken başlar.
+struct PressableStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.spring(response: 0.25, dampingFraction: 0.9), value: configuration.isPressed)
+    }
+}
+
+/// Ekranın ana eylemi için tam genişlikte dolu düğme.
+struct FilledButtonStyle: ButtonStyle {
+    let fill: Color
+    let on: Color
+
+    @Environment(\.isEnabled) private var isEnabled
+
+    init(fill: Color, on: Color) {
+        self.fill = fill
+        self.on = on
+    }
+
+    init(_ tint: Tint) {
+        self.init(fill: tint.fill, on: tint.on)
+    }
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.rounded(.title3, weight: .heavy))
+            .foregroundStyle(on)
+            .frame(maxWidth: .infinity, minHeight: 60)
+            .background(fill, in: Capsule())
+            .opacity(isEnabled ? 1 : 0.4)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.spring(response: 0.25, dampingFraction: 0.9), value: configuration.isPressed)
+    }
+}
+
+/// Renkli zemin üstünde duran yuvarlak ikon düğmesi.
+struct CircleIconButton: View {
+    let symbol: String
     let label: String
-    let color: Color
-    var isDisabled: Bool = false
-    var isLarge: Bool = false
+    let tint: Tint
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: isLarge ? 32 : 24, weight: .bold))
-                Text(label)
-                    .font(.system(size: 12, weight: .black))
-            }
-            .frame(width: isLarge ? 90 : 75, height: isLarge ? 90 : 75)
-            .background(
-                ZStack {
-                    if isDisabled {
-                        Circle().fill(Color.white.opacity(0.1))
-                    } else {
-                        Circle().fill(color.opacity(0.15))
-                        Circle().stroke(color.opacity(0.4), lineWidth: 2)
-                    }
-                }
-            )
-            .foregroundColor(isDisabled ? .white.opacity(0.2) : color)
+            Image(systemName: symbol)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(tint.on)
+                .frame(width: 44, height: 44)
+                .background(tint.deep.opacity(0.22), in: Circle())
         }
-        .disabled(isDisabled)
-    }
-}
-
-struct SwipeIndicatorIcon: View {
-    let icon: String
-    let color: Color
-    var body: some View {
-        Image(systemName: icon)
-            .font(.system(size: 80))
-            .foregroundColor(color)
-            .shadow(color: color.opacity(0.5), radius: 20)
-            .opacity(0.8)
-    }
-}
-
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3:
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6:
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8:
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (1, 1, 1, 0)
-        }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
-        )
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel(label)
     }
 }

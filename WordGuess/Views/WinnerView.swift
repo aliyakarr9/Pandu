@@ -1,102 +1,96 @@
 import SwiftUI
+import UIKit
 
 struct WinnerView: View {
     @ObservedObject var viewModel: GameViewModel
     let winner: Team
-    
-    @State private var showTrophy = false
-    @State private var showText = false
-    @State private var showScore = false
-    @State private var showButton = false
-    @State private var pulseBackground = false
+    /// Oyun bittiği andaki skorlar; ekran kapanırken sıfırlanmış görünmesin diye sabitlenir.
+    let teams: [Team]
+
+    @State private var hasAppeared = false
+    /// Son doğruya hızlı basan parmak kazanan ekranını yanlışlıkla geçmesin diye kısa bir bekleme.
+    @State private var isArmed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var tint: Tint { winner.tint }
 
     var body: some View {
         ZStack {
-            Color.black.edgesIgnoringSafeArea(.all)
-            
-            RadialGradient(colors: [winner.color.opacity(0.5), .clear], center: .center, startRadius: 10, endRadius: 400)
-                .scaleEffect(pulseBackground ? 1.2 : 0.9)
-                .opacity(0.8)
-                .edgesIgnoringSafeArea(.all)
-                .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: pulseBackground)
-            
-            VStack(spacing: 25) {
-                Spacer()
-                
-                ZStack {
-                    Circle().fill(Color.yellow.opacity(0.2)).frame(width: 250, height: 250).blur(radius: 50)
-                    VStack(spacing: -15) {
-                        Image(systemName: "crown.fill").font(.system(size: 80)).foregroundColor(.yellow).shadow(color: .orange, radius: 10).offset(y: showTrophy ? 0 : -50)
-                        Image(systemName: "trophy.fill").font(.system(size: 130)).symbolRenderingMode(.palette)
-                            .foregroundStyle(LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom), .yellow)
-                            .shadow(color: .orange.opacity(0.5), radius: 20)
+            BlobBackground(base: tint.fill, blobs: [
+                Blob(color: tint.pop, diameter: 150, anchor: .topLeading, offset: CGSize(width: 20, height: 90)),
+                Blob(color: tint.deep, diameter: 210, anchor: .bottomTrailing, offset: CGSize(width: 10, height: -170))
+            ])
+
+            VStack(spacing: 0) {
+                Spacer(minLength: 12)
+
+                PandaView(mood: .happy, crowned: true)
+                    .frame(width: 150)
+                    .background {
+                        Circle()
+                            .fill(tint.deep)
+                            .frame(width: 260, height: 260)
+                            .offset(y: 10)
+                    }
+                    .scaleEffect(hasAppeared ? 1 : 0.6)
+                    .rotationEffect(.degrees(hasAppeared ? 4 : -10))
+
+                Text(winner.name)
+                    .font(.display(56))
+                    .foregroundStyle(tint.on)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.4)
+                    .padding(.top, 70)
+                    .accessibilityAddTraits(.isHeader)
+                Text("kazandı!")
+                    .font(.display(34))
+                    .foregroundStyle(tint.onMuted)
+
+                HStack(alignment: .top, spacing: 20) {
+                    ForEach(teams) { team in
+                        ScoreBubble(team: team, isHighlighted: team.id == winner.id, nameColor: tint.on)
                     }
                 }
-                .scaleEffect(showTrophy ? 1.0 : 0.1)
-                .rotationEffect(.degrees(showTrophy ? 0 : -15))
-                .animation(.spring(response: 0.6, dampingFraction: 0.6), value: showTrophy)
+                .padding(.top, 22)
 
-                VStack(spacing: 10) {
-                    Text("ŞAMPİYON").font(.system(size: 18, weight: .black, design: .rounded)).foregroundColor(.white.opacity(0.6)).tracking(10)
-                    Text(winner.name.uppercased())
-                        .font(.system(size: 60, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
-                        .shadow(color: winner.color, radius: 15)
-                        .lineLimit(1).minimumScaleFactor(0.5).padding(.horizontal, 10)
-                        .scaleEffect(showText ? 1.0 : 0.5).opacity(showText ? 1 : 0)
-                        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showText)
+                Spacer(minLength: 12)
+
+                Button("Tekrar oyna") {
+                    viewModel.rematch()
                 }
+                .buttonStyle(FilledButtonStyle(fill: .white, on: tint.deep))
 
-                VStack(spacing: 5) {
-                    Text("TOPLAM SKOR").font(.system(size: 16, weight: .bold)).foregroundColor(winner.color.opacity(0.9)).tracking(3)
-                    Text("\(winner.score)").font(.system(size: 110, weight: .black, design: .rounded)).foregroundColor(.white).shadow(color: .black.opacity(0.5), radius: 2)
+                Button("Paket değiştir") {
+                    viewModel.quitGame()
+                    viewModel.returnToCategories()
                 }
-                .frame(maxWidth: .infinity).frame(height: 180)
-                .background(
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 45).fill(Color.white.opacity(0.06))
-                        RoundedRectangle(cornerRadius: 45).stroke(LinearGradient(colors: [winner.color, .clear, winner.color.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 3)
-                    }
-                )
-                .padding(.horizontal, 20)
-                .scaleEffect(showScore ? 1.0 : 0.8).opacity(showScore ? 1 : 0)
-                .animation(.spring(response: 0.6, dampingFraction: 0.7), value: showScore)
+                .font(.rounded(.body, weight: .bold))
+                .foregroundStyle(tint.on)
+                .frame(minHeight: 48)
+                .padding(.top, 4)
+            }
+            .allowsHitTesting(isArmed)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 8)
+            .frame(maxWidth: 520)
 
-                Spacer()
-
-                Button(action: {
-                    let generator = UIImpactFeedbackGenerator(style: .heavy)
-                    generator.impactOccurred()
-                    withAnimation { viewModel.quitGame() }
-                }) {
-                    HStack(spacing: 15) {
-                        Image(systemName: "house.fill")
-                        Text("ANA MENÜYE DÖN")
-                    }
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 22)
-                    .background(LinearGradient(colors: [winner.color, winner.color.opacity(0.7)], startPoint: .leading, endPoint: .trailing))
-                    .cornerRadius(25)
-                    .shadow(color: winner.color.opacity(0.5), radius: 20, y: 10)
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 40)
-                .offset(y: showButton ? 0 : 100)
-                .animation(.spring(response: 0.6, dampingFraction: 0.8), value: showButton)
+            if !reduceMotion {
+                ConfettiView(colors: [.white, Tint.sun.fill, Tint.rose.fill, Tint.green.fill, tint.pop])
             }
         }
         .task {
-            pulseBackground = true
-            try? await Task.sleep(for: .milliseconds(100))
-            showTrophy = true
-            try? await Task.sleep(for: .milliseconds(200))
-            showText = true
-            try? await Task.sleep(for: .milliseconds(200))
-            showScore = true
-            try? await Task.sleep(for: .milliseconds(300))
-            showButton = true
+            try? await Task.sleep(for: .milliseconds(1200))
+            isArmed = true
+        }
+        .onAppear {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            if reduceMotion {
+                hasAppeared = true
+            } else {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.55)) {
+                    hasAppeared = true
+                }
+            }
         }
     }
 }

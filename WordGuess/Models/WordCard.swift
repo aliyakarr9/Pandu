@@ -16,12 +16,21 @@ struct WordCard: Codable, Identifiable {
         }
     }
 
-    var themeColor: Color {
+    var difficultyLabel: String {
         switch difficulty {
-        case "easy":   return Color(red: 0.30, green: 0.75, blue: 0.55)
-        case "medium": return Color(red: 0.90, green: 0.65, blue: 0.30)
-        case "hard":   return Color(red: 0.85, green: 0.35, blue: 0.40)
-        default:       return Color.purple
+        case "easy":   return "Kolay"
+        case "medium": return "Orta"
+        case "hard":   return "Zor"
+        default:       return "Kolay"
+        }
+    }
+
+    var difficultyColor: Color {
+        switch difficulty {
+        case "easy":   return .green
+        case "medium": return .orange
+        case "hard":   return .red
+        default:       return .green
         }
     }
 }

@@ -1,134 +1,72 @@
 import SwiftUI
 
-struct RulesInfoCard: View {
-    let onDismiss: () -> Void
-    @State private var isVisible = false
+/// Kurallar. İlk oyunda kendiliğinden açılır, sonra soru işaretinden.
+struct RulesSheet: View {
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ZStack {
-            Color.black.opacity(0.8)
-                .ignoresSafeArea()
-                .onTapGesture { dismiss() }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Nasıl oynanır")
+                    .font(.rounded(.title2))
+                    .accessibilityAddTraits(.isHeader)
 
-            VStack(spacing: 0) {
-                VStack(spacing: 8) {
-                    Image(systemName: "info.circle.fill")
-                        .font(.system(size: 36))
-                        .foregroundStyle(
-                            LinearGradient(colors: [.purple, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
-                        )
-                    Text("NASIL OYNANIR?")
-                        .font(.system(size: 20, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
-                        .tracking(2)
+                Text("Anlatıcı kartın üstündeki kelimeyi, altındaki yasaklı kelimeleri söylemeden takımına anlatır.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 18) {
+                    RuleRow(symbol: "checkmark", color: Theme.correct, title: "Doğru",
+                            detail: "Kartın puanını alırsın: kolay 1, orta 2, zor 3 puan.")
+                    RuleRow(symbol: "hand.raised.fill", color: Theme.taboo, title: "Tabu",
+                            detail: "Yasaklı kelime söylenirse 1 puan gider.")
+                    RuleRow(symbol: "arrow.uturn.right", color: Theme.pass, title: "Pas",
+                            detail: "Puan değişmez. Pas hakkını kurulumda belirlersin.")
+                    RuleRow(symbol: "hand.draw.fill", color: Theme.pass, title: "Kaydırarak da oynanır",
+                            detail: "Kartı sağa atarsan doğru, sola pas, aşağı tabu.")
                 }
-                .padding(.top, 28)
-                .padding(.bottom, 20)
-
-                VStack(spacing: 12) {
-                    RuleRow(icon: "checkmark.circle.fill", iconColor: .green, title: "Doğru Bilirsen", description: "Zorluk puanı kadar puan kazanırsın")
-                    RuleRow(icon: "hand.raised.fill", iconColor: .red, title: "Tabu Yaparsan", description: "−1 puan kaybedersin")
-                    RuleRow(icon: "arrow.right.arrow.left", iconColor: .yellow, title: "Pas Geçersen", description: "Puan değişmez, sınırlı hakkın var")
-                }
-                .padding(.horizontal, 24)
-
-                Rectangle()
-                    .fill(LinearGradient(colors: [.clear, .white.opacity(0.15), .clear], startPoint: .leading, endPoint: .trailing))
-                    .frame(height: 1)
-                    .padding(.vertical, 18)
-                    .padding(.horizontal, 30)
-
-                VStack(spacing: 6) {
-                    Text("ZORLUK SEVİYELERİ")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundColor(.white.opacity(0.5))
-                        .tracking(2)
-                        .padding(.bottom, 6)
-                    HStack(spacing: 14) {
-                        DifficultyBadge(label: "KOLAY", points: "1", color: Color(red: 0.30, green: 0.75, blue: 0.55))
-                        DifficultyBadge(label: "ORTA", points: "2", color: Color(red: 0.90, green: 0.65, blue: 0.30))
-                        DifficultyBadge(label: "ZOR", points: "3", color: Color(red: 0.85, green: 0.35, blue: 0.40))
-                    }
-                }
-                .padding(.horizontal, 24)
-
-                Button(action: { dismiss() }) {
-                    Text("ANLADIM!")
-                        .font(.system(size: 17, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(LinearGradient(colors: [.purple, .purple.opacity(0.7)], startPoint: .leading, endPoint: .trailing))
-                        .cornerRadius(20)
-                        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.2), lineWidth: 1))
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 22)
-                .padding(.bottom, 28)
             }
-            .frame(maxWidth: 330)
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 35).fill(Color.black.opacity(0.7))
-                    RoundedRectangle(cornerRadius: 35).fill(.ultraThinMaterial)
-                    RoundedRectangle(cornerRadius: 35).stroke(Color.white.opacity(0.12), lineWidth: 1)
-                }
-            )
-            .shadow(color: .purple.opacity(0.2), radius: 30, y: 15)
-            .scaleEffect(isVisible ? 1.0 : 0.85)
-            .opacity(isVisible ? 1.0 : 0.0)
+            .padding(.horizontal, 24)
+            .padding(.top, 28)
+            .padding(.bottom, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .onAppear {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { isVisible = true }
+        .safeAreaInset(edge: .bottom) {
+            Button("Anladım") {
+                dismiss()
+            }
+            .buttonStyle(FilledButtonStyle(.indigo))
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
+            .background(Theme.surface)
         }
-    }
-
-    private func dismiss() {
-        withAnimation(.easeOut(duration: 0.2)) { isVisible = false }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { onDismiss() }
+        .presentationBackground(Theme.surface)
+        .presentationDetents([.fraction(0.72), .large])
+        .presentationDragIndicator(.visible)
     }
 }
 
 private struct RuleRow: View {
-    let icon: String
-    let iconColor: Color
-    let title: String
-    let description: String
-
-    var body: some View {
-        HStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.system(size: 22, weight: .bold))
-                .foregroundColor(iconColor)
-                .frame(width: 36, height: 36)
-                .background(iconColor.opacity(0.12))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 15, weight: .bold, design: .rounded)).foregroundColor(.white)
-                Text(description).font(.system(size: 13, weight: .medium, design: .rounded)).foregroundColor(.white.opacity(0.55))
-            }
-            Spacer()
-        }
-        .padding(.vertical, 6)
-    }
-}
-
-private struct DifficultyBadge: View {
-    let label: String
-    let points: String
+    let symbol: String
     let color: Color
+    let title: String
+    let detail: String
 
     var body: some View {
-        VStack(spacing: 6) {
-            Text(points).font(.system(size: 28, weight: .black, design: .rounded)).foregroundColor(color)
-            Text("PUAN").font(.system(size: 10, weight: .bold, design: .rounded)).foregroundColor(color.opacity(0.8)).tracking(1)
-            Text(label).font(.system(size: 10, weight: .bold, design: .rounded)).foregroundColor(color.opacity(0.6)).tracking(1).padding(.top, 2)
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Image(systemName: symbol)
+                .font(.body.weight(.bold))
+                .foregroundStyle(color)
+                .frame(width: 26)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.rounded(.headline))
+                Text(detail)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 18).fill(color.opacity(0.1))
-                .overlay(RoundedRectangle(cornerRadius: 18).stroke(color.opacity(0.25), lineWidth: 1))
-        )
+        .accessibilityElement(children: .combine)
     }
 }

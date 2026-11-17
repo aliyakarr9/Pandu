@@ -1,171 +1,125 @@
 import SwiftUI
 
+/// Turlar arasındaki sıra devri: kim oynayacak, skor ne durumda.
 struct ScoreBoardView: View {
     @ObservedObject var viewModel: GameViewModel
-    
-    @State private var isAnimate = false
-    @State private var pulse = false
 
-    var highestScoringTeamId: UUID? {
-        guard let maxScore = viewModel.teams.map(\.score).max() else { return nil }
-        let topTeams = viewModel.teams.filter { $0.score == maxScore }
-        return topTeams.count == 1 ? topTeams.first?.id : nil
-    }
-    
+    @State private var showQuitConfirm = false
+    @State private var hasAppeared = false
+    /// Tur biterken hızlı hızlı basan parmak yanlışlıkla yeni turu başlatmasın diye kısa bir bekleme.
+    @State private var isArmed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var team: Team { viewModel.currentTeam }
+    private var tint: Tint { team.tint }
+
     var body: some View {
         ZStack {
-            Color.black.edgesIgnoringSafeArea(.all)
-            
-            VStack {
-                Circle()
-                    .fill(viewModel.currentTeam.color.opacity(0.15))
-                    .frame(width: 400, height: 400)
-                    .blur(radius: 100)
-                    .scaleEffect(pulse ? 1.1 : 1.0)
-                    .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: pulse)
-                    .offset(y: -150)
-                Spacer()
-            }
-            
+            BlobBackground(base: tint.fill, blobs: [
+                Blob(color: tint.pop, diameter: 130, anchor: .topTrailing, offset: CGSize(width: 10, height: 250)),
+                Blob(color: tint.deep, diameter: 180, anchor: .bottomLeading, offset: CGSize(width: -50, height: -150))
+            ])
+
             VStack(spacing: 0) {
-                VStack(spacing: 5) {
-                    Text("SKOR DURUMU")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white.opacity(0.5))
-                        .tracking(4)
-                    Text("Hazırlan!")
-                        .font(.system(size: 28, weight: .black, design: .rounded))
-                        .foregroundStyle(LinearGradient(colors: [.white, .white.opacity(0.7)], startPoint: .top, endPoint: .bottom))
-                }
-                .padding(.top, 60)
-                .padding(.bottom, 40)
-                .opacity(isAnimate ? 1 : 0)
-                .offset(y: isAnimate ? 0 : -20)
-
-                HStack(spacing: 20) {
-                    ForEach(Array(viewModel.teams.enumerated()), id: \.element.id) { index, team in
-                        TeamScoreCard(name: team.name, score: team.score, color: team.color, isCurrentTurn: viewModel.currentTeam.id == team.id, isHighestScore: highestScoringTeamId == team.id)
-                            .offset(x: isAnimate ? 0 : (index == 0 ? -100 : 100))
+                HStack {
+                    CircleIconButton(symbol: "xmark", label: "Oyunu bitir", tint: tint) {
+                        showQuitConfirm = true
+                    }
+                    Spacer()
+                    CircleIconButton(symbol: "questionmark", label: "Nasıl oynanır", tint: tint) {
+                        viewModel.showRulesCard = true
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 40)
 
-                VStack(spacing: 15) {
-                    HStack {
-                        Image(systemName: "flag.fill").font(.system(size: 14))
-                        Text("SIRADAKİ TAKIM").font(.system(size: 14, weight: .bold)).tracking(2)
+                Spacer(minLength: 8)
+
+                PandaView(mood: .happy)
+                    .frame(width: 140)
+                    .background {
+                        Circle()
+                            .fill(tint.deep)
+                            .frame(width: 250, height: 250)
                     }
-                    .foregroundColor(viewModel.currentTeam.color)
-                    .opacity(0.8)
-                    
-                    Text(viewModel.currentTeam.name.uppercased())
-                        .font(.system(size: 40, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                        .shadow(color: viewModel.currentTeam.color.opacity(0.6), radius: 20, x: 0, y: 0)
-                }
-                .opacity(isAnimate ? 1 : 0)
-                .scaleEffect(isAnimate ? 1 : 0.8)
+                    .scaleEffect(hasAppeared ? 1 : 0.7)
+                    .rotationEffect(.degrees(hasAppeared ? -4 : 8))
 
-                Spacer()
+                Text("Sıra sizde")
+                    .font(.rounded(.headline, weight: .heavy))
+                    .foregroundStyle(tint.onMuted)
+                    .padding(.top, 74)
+                Text(team.name)
+                    .font(.display(56))
+                    .foregroundStyle(tint.on)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.4)
+                    .accessibilityAddTraits(.isHeader)
+                Text("Telefonu anlatıcıya ver")
+                    .font(.rounded(.body, weight: .semibold))
+                    .foregroundStyle(tint.onMuted)
 
-                Button(action: {
-                    withAnimation(.spring()) { viewModel.startRound() }
-                }) {
-                    HStack(spacing: 12) {
-                        Text("TURU BAŞLAT")
-                        Image(systemName: "play.circle.fill")
+                Spacer(minLength: 8)
+
+                HStack(alignment: .top, spacing: 20) {
+                    ForEach(viewModel.teams) { item in
+                        ScoreBubble(team: item, isHighlighted: item.id == team.id, nameColor: tint.on)
                     }
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 22)
-                    .background(
-                        ZStack {
-                            LinearGradient(colors: [viewModel.currentTeam.color, viewModel.currentTeam.color.opacity(0.7)], startPoint: .leading, endPoint: .trailing)
-                            RoundedRectangle(cornerRadius: 30)
-                                .stroke(viewModel.currentTeam.color.opacity(0.5), lineWidth: 2)
-                                .scaleEffect(pulse ? 1.05 : 1.0)
-                                .opacity(pulse ? 0 : 1)
-                        }
-                    )
-                    .cornerRadius(30)
-                    .shadow(color: viewModel.currentTeam.color.opacity(0.5), radius: 20, y: 10)
-                    .scaleEffect(pulse ? 1.02 : 1.0)
                 }
-                .padding(.horizontal, 30)
-                .padding(.bottom, 50)
-                .opacity(isAnimate ? 1 : 0)
-                .offset(y: isAnimate ? 0 : 50)
+
+                Text(footnote)
+                    .font(.rounded(.footnote, weight: .semibold))
+                    .foregroundStyle(tint.onMuted)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 12)
+                    .padding(.bottom, 16)
+
+                Button("Turu başlat") {
+                    viewModel.startRound()
+                }
+                .buttonStyle(FilledButtonStyle(fill: .white, on: tint.deep))
+                .allowsHitTesting(isArmed)
             }
-        }
-        .overlay {
-            if viewModel.showRulesCard {
-                RulesInfoCard { viewModel.showRulesCard = false }
-                    .transition(.opacity)
-                    .zIndex(100)
-            }
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+            .frame(maxWidth: 520)
         }
         .onAppear {
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.7, blendDuration: 0)) { isAnimate = true }
-            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) { pulse = true }
+            if reduceMotion {
+                hasAppeared = true
+            } else {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                    hasAppeared = true
+                }
+            }
+        }
+        .task {
+            try? await Task.sleep(for: .milliseconds(900))
+            isArmed = true
+        }
+        .sheet(isPresented: $viewModel.showRulesCard, onDismiss: viewModel.markRulesSeen) {
+            RulesSheet()
+        }
+        .confirmationDialog("Oyun bitsin mi?", isPresented: $showQuitConfirm, titleVisibility: .visible) {
+            Button("Oyunu bitir", role: .destructive) {
+                viewModel.quitGame()
+            }
+            Button("Vazgeç", role: .cancel) {}
+        } message: {
+            Text("Skorlar silinir.")
         }
     }
-}
 
-struct TeamScoreCard: View {
-    let name: String
-    let score: Int
-    let color: Color
-    let isCurrentTurn: Bool
-    let isHighestScore: Bool
-    
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 35)
-                .fill(
-                    LinearGradient(
-                        colors: isCurrentTurn ? [color.opacity(0.2), color.opacity(0.05)] : [Color.white.opacity(0.05), Color.white.opacity(0.02)],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 35)
-                        .stroke(isCurrentTurn ? color.opacity(0.6) : Color.white.opacity(0.1), lineWidth: isCurrentTurn ? 2 : 1)
-                )
-                .shadow(color: isCurrentTurn ? color.opacity(0.3) : .clear, radius: 20, x: 0, y: 10)
-            
-            VStack(spacing: 15) {
-                if isHighestScore {
-                    Image(systemName: "crown.fill").font(.system(size: 20)).foregroundColor(.yellow).shadow(color: .orange, radius: 10).transition(.scale.combined(with: .opacity))
-                } else {
-                    Image(systemName: "circle.fill").font(.system(size: 8)).foregroundColor(.white.opacity(0.1))
-                }
-                
-                Text("\(score)")
-                    .font(.system(size: 80, weight: .black, design: .rounded))
-                    .foregroundColor(isCurrentTurn ? .white : .white.opacity(0.4))
-                    .shadow(color: isCurrentTurn ? color.opacity(0.8) : .clear, radius: 15)
-                    .scaleEffect(isCurrentTurn ? 1.1 : 1.0)
-                
-                Text(name.uppercased())
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(color)
-                    .tracking(1)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(color.opacity(0.1))
-                    .cornerRadius(10)
-            }
-            .padding(.vertical, 40)
+    private var footnote: String {
+        let target = "Hedef \(viewModel.settings.targetScore) puan."
+        guard let last = viewModel.lastRound else { return target }
+        let summary: String
+        if last.score > 0 {
+            summary = "\(last.teamName) bu turda \(last.score) puan topladı."
+        } else if last.score < 0 {
+            summary = "\(last.teamName) bu turda \(-last.score) puan kaybetti."
+        } else {
+            summary = "\(last.teamName) bu turda puan alamadı."
         }
-        .frame(maxWidth: .infinity)
-        .scaleEffect(isCurrentTurn ? 1.05 : 0.95)
-        .animation(.spring(), value: isCurrentTurn)
-        .animation(.spring(), value: isHighestScore)
+        return summary + " " + target
     }
 }

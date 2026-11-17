@@ -3,12 +3,17 @@ import Combine
 import SwiftUI
 import UIKit
 
+struct RoundSummary: Equatable {
+    let teamName: String
+    let score: Int
+}
+
 @MainActor
 class GameViewModel: ObservableObject {
     
     @Published var teams: [Team] = [
-        Team(name: "1. Takım", color: .purple),
-        Team(name: "2. Takım", color: .orange)
+        Team(name: "1. Takım", tint: .indigo),
+        Team(name: "2. Takım", tint: .amber)
     ]
     @Published var currentTeamIndex: Int = 0
     @Published var gameState: GameState = .categorySelection
@@ -20,25 +25,32 @@ class GameViewModel: ObservableObject {
     @Published var selectedCategory: CategoryPack?
     @Published var isDeckEmpty: Bool = false
     @Published var showRulesCard: Bool = false
+    @Published var lastRound: RoundSummary?
     
     private var deck: [WordCard] = []
     private var usedCards: [WordCard] = []
     private var timerCancellable: AnyCancellable?
-    private var isProcessingAction: Bool = false
     
     private enum DefaultsKey {
         static let roundTime = "settings_roundTime"
         static let targetScore = "settings_targetScore"
         static let maxPassCount = "settings_maxPassCount"
+        static let hasSeenRules = "hasSeenRules"
     }
     
     var currentTeam: Team {
         guard teams.indices.contains(currentTeamIndex) else {
-            return teams.first ?? Team(name: "Takım", color: .gray)
+            return teams.first ?? Team(name: "Takım", tint: .indigo)
         }
         return teams[currentTeamIndex]
     }
     
+    /// Kalan pas hakkı; sınırsızsa nil.
+    var passesLeft: Int? {
+        guard settings.maxPassCount >= 0 else { return nil }
+        return max(0, settings.maxPassCount - passesUsed)
+    }
+
     var isPassLimitReached: Bool {
         guard settings.maxPassCount >= 0 else { return false }
         return passesUsed >= settings.maxPassCount
@@ -79,14 +91,27 @@ class GameViewModel: ObservableObject {
             teams[index].score = 0
         }
         currentTeamIndex = 0
-        showRulesCard = true
+        lastRound = nil
+        showRulesCard = !UserDefaults.standard.bool(forKey: DefaultsKey.hasSeenRules)
         gameState = .betweenRounds
+    }
+
+    /// Aynı takımlar ve paketle yeni bir oyun başlatır.
+    func rematch() {
+        timerCancellable?.cancel()
+        if let category = selectedCategory {
+            loadDeck(fileName: category.jsonFileName)
+        }
+        startGame()
+    }
+
+    func markRulesSeen() {
+        UserDefaults.standard.set(true, forKey: DefaultsKey.hasSeenRules)
     }
     
     func startRound() {
         roundScore = 0
         passesUsed = 0
-        isProcessingAction = false
         timeRemaining = settings.roundTime
         gameState = .playing
         nextCard()
@@ -108,6 +133,7 @@ class GameViewModel: ObservableObject {
         
         guard teams.indices.contains(currentTeamIndex) else { return }
         teams[currentTeamIndex].score += roundScore
+        lastRound = RoundSummary(teamName: teams[currentTeamIndex].name, score: roundScore)
         
         if checkWinCondition() { return }
         
@@ -149,10 +175,6 @@ class GameViewModel: ObservableObject {
     }
     
     func markCorrect() {
-        guard !isProcessingAction else { return }
-        isProcessingAction = true
-        defer { isProcessingAction = false }
-        
         roundScore += currentCard?.pointValue ?? 1
         if let card = currentCard {
             usedCards.append(card)
@@ -171,10 +193,6 @@ class GameViewModel: ObservableObject {
     }
     
     func markTaboo() {
-        guard !isProcessingAction else { return }
-        isProcessingAction = true
-        defer { isProcessingAction = false }
-        
         roundScore -= 1
         if let card = currentCard {
             usedCards.append(card)
@@ -184,17 +202,12 @@ class GameViewModel: ObservableObject {
     }
     
     func markPass() {
-        guard !isProcessingAction else { return }
-        
         if settings.maxPassCount >= 0 && passesUsed >= settings.maxPassCount {
             let generator = UINotificationFeedbackGenerator()
             generator.notificationOccurred(.error)
             return
         }
-        
-        isProcessingAction = true
-        defer { isProcessingAction = false }
-        
+
         passesUsed += 1
         if let card = currentCard {
             usedCards.append(card)
@@ -210,7 +223,8 @@ class GameViewModel: ObservableObject {
                 guard let self = self else { return }
                 if self.timeRemaining > 0 {
                     self.timeRemaining -= 1
-                } else {
+                }
+                if self.timeRemaining == 0 {
                     self.endRound()
                 }
             }

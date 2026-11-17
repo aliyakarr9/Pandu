@@ -1,369 +1,160 @@
 import SwiftUI
 
+/// Oyun kurulumu: seçili paket, takım adları ve kurallar.
 struct HomeView: View {
     @ObservedObject var viewModel: GameViewModel
-    
-    private var categoryColor: Color {
-        viewModel.selectedCategory?.color ?? .purple
+
+    private let unlimitedPasses = 11
+    private let maxNameLength = 16
+
+    private var pack: CategoryPack {
+        viewModel.selectedCategory ?? CategoryPack.allCategories[0]
     }
-    
-    private var categoryIcon: String {
-        viewModel.selectedCategory?.icon ?? "star.fill"
+
+    private var tint: Tint { pack.tint }
+
+    private var roundTime: Binding<Int> {
+        Binding(
+            get: { viewModel.settings.roundTime },
+            set: {
+                viewModel.settings.roundTime = $0
+                viewModel.saveSettings()
+            }
+        )
     }
-    
-    private var categoryName: String {
-        viewModel.selectedCategory?.title ?? "Klasik"
+
+    private var targetScore: Binding<Int> {
+        Binding(
+            get: { viewModel.settings.targetScore },
+            set: {
+                viewModel.settings.targetScore = $0
+                viewModel.saveSettings()
+            }
+        )
+    }
+
+    private var passCount: Binding<Int> {
+        Binding(
+            get: { viewModel.settings.maxPassCount < 0 ? unlimitedPasses : viewModel.settings.maxPassCount },
+            set: {
+                viewModel.settings.maxPassCount = $0 >= unlimitedPasses ? -1 : $0
+                viewModel.saveSettings()
+            }
+        )
+    }
+
+    private var passText: String {
+        viewModel.settings.maxPassCount < 0 ? "Sınırsız" : "\(viewModel.settings.maxPassCount)"
     }
 
     var body: some View {
         ZStack {
-            Color.black.edgesIgnoringSafeArea(.all)
-            
-            VStack {
-                HStack {
-                    Circle()
-                        .fill(categoryColor.opacity(0.25))
-                        .frame(width: 300, height: 300)
-                        .blur(radius: 80)
-                        .offset(x: -100, y: -100)
-                    Spacer()
-                }
-                Spacer()
-            }
-            
-            GeometryReader { geometry in
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 25) {
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            withAnimation {
-                                viewModel.returnToCategories()
-                            }
-                        }) {
-                            CompactHeroCard(
-                                categoryName: categoryName,
-                                color: categoryColor,
-                                icon: categoryIcon
-                            )
-                        }
-                        .buttonStyle(ScaleButtonStyle())
-                        .padding(.horizontal, 20)
+            BlobBackground(base: tint.fill, blobs: [
+                Blob(color: tint.deep, diameter: 260, anchor: .topTrailing, offset: CGSize(width: -30, height: 70)),
+                Blob(color: tint.pop, diameter: 150, anchor: .bottomLeading, offset: CGSize(width: 20, height: -70))
+            ])
 
-                        VStack(spacing: 0) {
-                            
-                            VStack(alignment: .leading, spacing: 15) {
-                                HStack {
-                                    Image(systemName: "flag.2.crossed.fill")
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.white.opacity(0.7))
-                                    Text("Karşılaşmalar")
-                                        .font(.system(size: 16, weight: .heavy, design: .rounded))
-                                        .foregroundColor(.white.opacity(0.7))
-                                        .tracking(2)
-                                }
-                                .padding(.leading, 10)
-                                .padding(.top, 5)
-                                
-                                ZStack {
-                                    HStack(spacing: 15) {
-                                        if viewModel.teams.indices.contains(0) {
-                                            CompetitiveTeamInput(
-                                                color: viewModel.teams[0].color,
-                                                placeholder: "1. Takım",
-                                                text: $viewModel.teams[0].name,
-                                                alignment: .leading
-                                            )
-                                        }
-                                        
-                                        if viewModel.teams.indices.contains(1) {
-                                            CompetitiveTeamInput(
-                                                color: viewModel.teams[1].color,
-                                                placeholder: "2. Takım",
-                                                text: $viewModel.teams[1].name,
-                                                alignment: .trailing
-                                            )
+            VStack(spacing: 0) {
+                header
+
+                Form {
+                    Section {
+                        ForEach(viewModel.teams.indices, id: \.self) { index in
+                            HStack(spacing: 12) {
+                                Circle()
+                                    .fill(viewModel.teams[index].tint.fill)
+                                    .frame(width: 14, height: 14)
+                                    .accessibilityHidden(true)
+                                TextField("\(index + 1). Takım", text: $viewModel.teams[index].name)
+                                    .font(.rounded(.body, weight: .semibold))
+                                    .submitLabel(.done)
+                                    .autocorrectionDisabled()
+                                    .onChange(of: viewModel.teams[index].name) { _, name in
+                                        if name.count > maxNameLength {
+                                            viewModel.teams[index].name = String(name.prefix(maxNameLength))
                                         }
                                     }
-                                    
-                                    Text("VS")
-                                        .font(.system(size: 32, weight: .black, design: .rounded))
-                                        .italic()
-                                        .foregroundColor(.white)
-                                        .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 5)
-                                        .padding(10)
-                                        .background(
-                                            Circle()
-                                                .fill(LinearGradient(colors: [.purple, .orange], startPoint: .topLeading, endPoint: .bottomTrailing))
-                                                .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 2))
-                                        )
-                                        .offset(y: -5)
-                                }
-                                .frame(height: 100)
                             }
-                            .padding(20)
-                            
-                            Rectangle()
-                                .fill(LinearGradient(
-                                    colors: [.clear, .white.opacity(0.15), .clear],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                ))
-                                .frame(height: 1)
-                                .padding(.horizontal, 20)
-                            
-                            VStack(alignment: .leading, spacing: 15) {
-                                HStack {
-                                    Image(systemName: "slider.horizontal.3")
-                                        .font(.system(size: 14, weight: .bold))
-                                    Text("AYARLAR")
-                                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                                }
-                                .foregroundColor(.white.opacity(0.7))
-                                .padding(.leading, 10)
-                                .padding(.top, 10)
-                                
-                                VStack(spacing: 12) {
-                                    SettingsSliderRow(
-                                        title: "Süre",
-                                        icon: "timer",
-                                        valueText: "\(viewModel.settings.roundTime)s",
-                                        color: .blue,
-                                        value: Binding(
-                                            get: { Double(viewModel.settings.roundTime) },
-                                            set: {
-                                                viewModel.settings.roundTime = Int($0)
-                                                viewModel.saveSettings()
-                                            }
-                                        ),
-                                        range: 30...120,
-                                        step: 10
-                                    )
-                                    
-                                    SettingsSliderRow(
-                                        title: "Hedef",
-                                        icon: "target",
-                                        valueText: "\(viewModel.settings.targetScore)",
-                                        color: .green,
-                                        value: Binding(
-                                            get: { Double(viewModel.settings.targetScore) },
-                                            set: {
-                                                viewModel.settings.targetScore = Int($0)
-                                                viewModel.saveSettings()
-                                            }
-                                        ),
-                                        range: 10...100,
-                                        step: 5
-                                    )
-                                    
-                                    SettingsSliderRow(
-                                        title: "Pas Hakkı",
-                                        icon: "arrow.uturn.forward",
-                                        valueText: viewModel.settings.maxPassCount < 0 ? "∞" : "\(viewModel.settings.maxPassCount)",
-                                        color: .yellow,
-                                        value: Binding(
-                                            get: { Double(viewModel.settings.maxPassCount < 0 ? 11 : viewModel.settings.maxPassCount) },
-                                            set: { val in
-                                                if val > 10 { viewModel.settings.maxPassCount = -1 }
-                                                else { viewModel.settings.maxPassCount = Int(val) }
-                                                viewModel.saveSettings()
-                                            }
-                                        ),
-                                        range: 0...11,
-                                        step: 1
-                                    )
-                                }
-                            }
-                            .padding(20)
                         }
-                        .background(
-                            RoundedRectangle(cornerRadius: 35)
-                                .fill(.ultraThinMaterial)
-                                .opacity(0.9)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 35)
-                                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                                )
-                        )
-                        .padding(.horizontal, 20)
-
-                        Button(action: {
-                            withAnimation {
-                                viewModel.startGame()
-                            }
-                        }) {
-                            Text("OYUNU BAŞLAT")
-                                .font(.system(size: 22, weight: .black, design: .rounded))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 20)
-                                .background(
-                                    LinearGradient(
-                                        colors: [categoryColor, categoryColor.opacity(0.7)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .cornerRadius(25)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 25)
-                                        .stroke(Color.white.opacity(0.25), lineWidth: 1)
-                                )
-                                .shadow(color: categoryColor.opacity(0.4), radius: 15, y: 8)
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        Spacer()
+                    } header: {
+                        sectionTitle("Takımlar")
                     }
-                    .frame(minHeight: geometry.size.height)
+
+                    Section {
+                        Stepper(value: roundTime, in: 30...120, step: 10) {
+                            LabeledContent("Süre", value: "\(viewModel.settings.roundTime) sn")
+                        }
+                        Stepper(value: targetScore, in: 10...100, step: 5) {
+                            LabeledContent("Hedef", value: "\(viewModel.settings.targetScore) puan")
+                        }
+                        Stepper(value: passCount, in: 0...unlimitedPasses) {
+                            LabeledContent("Pas hakkı", value: passText)
+                        }
+                    } header: {
+                        sectionTitle("Kurallar")
+                    }
                 }
+                .scrollContentBackground(.hidden)
+                .scrollDismissesKeyboard(.interactively)
+                .tint(tint.fill)
             }
+            .frame(maxWidth: 560)
+        }
+        .safeAreaInset(edge: .bottom) {
+            Button("Oyunu başlat") {
+                viewModel.startGame()
+            }
+            .buttonStyle(FilledButtonStyle(fill: .white, on: tint.deep))
+            .disabled(viewModel.isDeckEmpty)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .frame(maxWidth: 560)
         }
     }
-}
 
-struct CompetitiveTeamInput: View {
-    let color: Color
-    let placeholder: String
-    @Binding var text: String
-    let alignment: HorizontalAlignment
-    
-    var body: some View {
-        ZStack(alignment: alignment == .leading ? .leading : .trailing) {
-            RoundedRectangle(cornerRadius: 25)
-                .fill(
-                    LinearGradient(
-                        colors: [color.opacity(0.25), color.opacity(0.05)],
-                        startPoint: alignment == .leading ? .leading : .trailing,
-                        endPoint: alignment == .leading ? .trailing : .leading
-                    )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 25)
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [color.opacity(0.7), color.opacity(0.1)],
-                                startPoint: alignment == .leading ? .leading : .trailing,
-                                endPoint: alignment == .leading ? .trailing : .leading
-                            ),
-                            lineWidth: 2
-                        )
-                )
-            
-            VStack(alignment: alignment, spacing: 6) {
-                Text(placeholder.uppercased())
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(color)
-                    .tracking(1)
-                    .padding(alignment == .leading ? .leading : .trailing, 5)
-                
-                HStack(spacing: 5) {
-                    if alignment == .trailing { Spacer(minLength: 0) }
-                    
-                    TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.white.opacity(0.3)))
-                        .font(.system(size: 22, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(alignment == .leading ? .leading : .trailing)
-                        .submitLabel(.done)
-                        .minimumScaleFactor(0.5)
+    private func sectionTitle(_ title: String) -> some View {
+        Text(title)
+            .font(.rounded(.headline, weight: .heavy))
+            .foregroundStyle(tint.on)
+            .textCase(nil)
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                viewModel.returnToCategories()
+            } label: {
+                Label("Paketler", systemImage: "chevron.left")
+                    .font(.rounded(.body, weight: .bold))
+                    .foregroundStyle(tint.onMuted)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(PressableStyle())
+
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(pack.title)
+                        .font(.display(52))
+                        .foregroundStyle(tint.on)
                         .lineLimit(1)
-                    
-                    Image(systemName: "pencil")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white.opacity(0.4))
-                    
-                    if alignment == .leading { Spacer(minLength: 0) }
+                        .minimumScaleFactor(0.5)
+                        .accessibilityAddTraits(.isHeader)
+                    Text("\(pack.desc) \(pack.cardCount) kart.")
+                        .font(.rounded(.subheadline, weight: .semibold))
+                        .foregroundStyle(tint.onMuted)
                 }
+                Spacer(minLength: 12)
+                Image(systemName: pack.icon)
+                    .font(.system(size: 54, weight: .bold))
+                    .foregroundStyle(tint.onDeep)
+                    .frame(width: 96, height: 96)
+                    .accessibilityHidden(true)
             }
-            .padding(15)
         }
-        .frame(maxHeight: .infinity)
-    }
-}
-
-struct CompactHeroCard: View {
-    let categoryName: String
-    let color: Color
-    let icon: String
-    
-    var body: some View {
-        HStack(spacing: 15) {
-            ZStack {
-                Circle()
-                    .fill(Color.black.opacity(0.25))
-                    .frame(width: 60, height: 60)
-                Image(systemName: icon)
-                    .font(.system(size: 28))
-                    .foregroundColor(.white)
-            }
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text("SEÇİLİ PAKET")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.white.opacity(0.6))
-                    .tracking(1)
-                
-                Text(categoryName.uppercased())
-                    .font(.system(size: 28, weight: .black, design: .rounded))
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .padding(.trailing, 5)
-            }
-            
-            Spacer()
-            
-            HStack(spacing: 4) {
-                Text("Değiştir")
-                Image(systemName: "chevron.right")
-            }
-            .font(.system(size: 12, weight: .bold))
-            .foregroundColor(.white.opacity(0.8))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color.black.opacity(0.25))
-            .clipShape(Capsule())
-        }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 30)
-                .fill(LinearGradient(colors: [color.opacity(0.9), color.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                .overlay(RoundedRectangle(cornerRadius: 30).stroke(Color.white.opacity(0.2), lineWidth: 1))
-        )
-        .shadow(color: color.opacity(0.3), radius: 15, x: 0, y: 8)
-    }
-}
-
-struct SettingsSliderRow: View {
-    let title: String
-    let icon: String
-    let valueText: String
-    let color: Color
-    @Binding var value: Double
-    let range: ClosedRange<Double>
-    let step: Double
-    
-    var body: some View {
-        HStack(spacing: 15) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(color.opacity(0.2))
-                    .frame(width: 36, height: 36)
-                Image(systemName: icon)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(color)
-            }
-            Text(title)
-                .font(.system(size: 15, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
-                .frame(width: 75, alignment: .leading)
-            Slider(value: $value, in: range, step: step)
-                .tint(color)
-            Text(valueText)
-                .font(.system(size: 16, weight: .black, design: .monospaced))
-                .foregroundColor(color)
-                .frame(width: 50, alignment: .trailing)
-        }
+        .padding(.horizontal, 20)
+        .padding(.top, 4)
+        .padding(.bottom, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
