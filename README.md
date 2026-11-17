@@ -1,30 +1,33 @@
 # 🚀 Pandu - Kelime Tahmin Oyunu - iOS
 
-![Platform](https://img.shields.io/badge/Platform-iOS%2016%2B-blue)
+![Platform](https://img.shields.io/badge/Platform-iOS%2017%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9-orange)
 ![SwiftUI](https://img.shields.io/badge/UI-SwiftUI-red)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-**Pandu, arkadaş ortamlarının ve toplanmaların vazgeçilmezi olan klasik kelime tahmin (tabu) oyununu modern, dinamik ve neon bir tasarımla mobil cihazlara taşıyan yeni nesil bir iOS uygulamasıdır. Standart ve sıkıcı tahmin oyunlarının aksine, **Pandu** tamamen kullanıcı deneyimine (UX) odaklanır; akıcı animasyonları, göz yormayan karanlık modu ve tamamı ücretsiz, devasa kelime haznesiyle öne çıkar.
+**Pandu (eski adıyla WordGuess)**, arkadaş ortamında iki takımla oynanan bir kelime anlatma (tabu) oyunudur. Anlatıcı karttaki kelimeyi, altındaki beş yasaklı kelimeyi söylemeden takımına anlatır; telefon turdan tura elden ele dolaşır. Uygulama tek cihazda, internetsiz çalışır ve tüm paketler ücretsizdir.
 
 ---
 
 ## ✨ Öne Çıkan Özellikler
 
-* 📚 **Geniş ve Güncel Kütüphane:** Yenilikçi ve özenle seçilmiş **2500'den fazla** kelime. Sürekli güncellenen veritabanı.
-* 🎭 **Tematik Modlar ve Paketler:** Her moda özel renk paletleri ve hissiyat!
+* 📚 **3200'den fazla kart, 7 paket:**
   * **Klasik:** Genel kültür ve karışık kelimeler.
-  * **Yeşilçam & Sinema:** Nostaljik Türk filmleri ve dünya sineması klasikleri.
-  * **Gamer:** E-spor, oyun kültürü ve donanım terimleri.
-  * **Tarih:** Tarihi olaylar, liderler ve zaferler.
-  * **İngilizce:** Dil pratiği yapmak isteyenler için özel İngilizce kelime paketi.
-* ⚔️ **Gelişmiş Versus Modu:** Uygulama içi akıllı takım yönetimi. Takım isimlerini özelleştirin ve kıyasıya bir rekabete başlayın. Puan durumu eşzamanlı ve şık bir skor tablosunda takip edilir.
-* 🎨 **Premium Neon UI:** Göz yormayan, yüksek kontrastlı ve tamamen SwiftUI ile geliştirilmiş, akıcılığa odaklanan "Dark Mode" arayüz.
-* 🎉 **Tatmin Edici Animasyonlar ve Sesler (Haptics):** 
-  * Şampiyonluk ekranında kalp atışı (pulse) efektleri ve kupa animasyonları.
-  * Doğru/Yanlış ve Pas durumlarında anlık titreşim (Haptic Feedback) ve özel ses efektleri.
-  * Kartları kaydırarak (Swipe) kolay oyun kontrolü.
-* ⚙️ **Esnek Oyun Dinamikleri:** Tur süresi (30sn-120sn), hedef skor (10-100) ve pas hakkı (sınırsız veya kısıtlı) gibi dinamikleri tamamen grubunuza göre kişiselleştirin.
+  * **Gamer:** Oyunlar, e-spor ve donanım terimleri.
+  * **Maneviyat:** Manevi değerler ve Ramazan kültürü.
+  * **Yeşilçam:** Eski Türk filmleri.
+  * **Tarih:** Tarihi olaylar ve kişiler.
+  * **Sinema:** Kült filmler ve dünya sineması.
+  * **İngilizce:** Yasaklı kelimelerle dil pratiği.
+  * *Yakında:* Bilim Kurgu, Spor, Müzik.
+* ⚔️ **İki takım:** Takım adlarını siz verirsiniz. Her turun başında sıranın kimde olduğu ve skor büyükçe gösterilir; ekran sıradaki takımın rengine bürünür.
+* 🃏 **Kaydırarak ya da düğmeyle oynama:** Kartı sağa atınca doğru, sola pas, aşağı tabu. Aynı üç eylem ekranın altındaki düğmelerde de var.
+* 🎯 **Puanlama:** Kolay kart 1, orta 2, zor 3 puan. Tabu 1 puan götürür, pas puanı değiştirmez.
+* 🐼 **Tepki veren panda:** Doğruda sevinir, tabuda şaşırır, molada uyur, kazanan takıma taç takar.
+* 🔥 **Oyun hissi:** Kazanılan ve kaybedilen puan skorun yanından fırlar, üç doğrudan sonra seri sayacı çıkar, son on saniyede süre kırmızıya döner. Her eylemde titreşim ve ses vardır.
+* ⚙️ **Ayarlar:** Tur süresi (30-120 sn), hedef skor (10-100) ve pas hakkı (0-10 ya da sınırsız). Ayarlar cihazda saklanır.
+* ⏸ **Mola:** Duraklatınca kart gizlenir. Uygulama arka plana geçtiğinde oyun kendiliğinden duraklar.
+* ♿ **Erişilebilirlik:** Sistem yazı boyutuna ve koyu moda uyar, düğmelerin VoiceOver etiketleri vardır, "Hareketi Azalt" açıkken konfeti ve yaylanma kapanır.
 
 ---
 
@@ -34,7 +37,7 @@
 |---|---|---|
 | <img src="Screenshots/paketekrani.jpg" width="220"> | <img src="Screenshots/ayarekrani.jpg" width="220"> | <img src="Screenshots/oyunekrani.jpg" width="220"> |
 
-| Skor Tablosu | Şampiyon Ekranı |
+| Sıra Devri | Kazanan Ekranı |
 |---|---|
 | <img src="Screenshots/skorekrani.jpg" width="220"> | <img src="Screenshots/sampiyonekrani.jpg" width="220"> |
 
@@ -42,14 +45,13 @@
 
 ## 🛠 Teknik Detaylar & Mimari
 
-Projeyi geliştirirken Apple'ın modern teknolojileri ve en iyi mimari yaklaşımlar (Best Practices) kullanılmıştır:
-
-* **Mimari:** Kesin hatlarla ayrılmış **MVVM (Model-View-ViewModel)** mimarisi.
-* **Kullanıcı Arayüzü:** `%100 SwiftUI` ile Declarative (Bildirimsel) UI tasarımı. Zengin görsel katmanlar (ZStack) ve özel gradient teknikleri.
-* **State Management:** Veri akışı ve senkronizasyon için iOS'un gücü olan `@StateObject`, `@ObservedObject` ve `@Binding` yapıları.
-* **Animasyonlar:** SwiftUI Transitions, MatchGeometryEffect ve ince ayarlanmış Spring (Yay) animasyonları.
-* **Geri Bildirim:** Cihaz titreşim motoru için `UIFeedbackGenerator` entegrasyonu.
-* **Veri Yükleme:** JSON tabanlı lokal veritabanı yönetimi ile sıfır gecikme (Zero-latency offline veri ayrıştırma).
+* **Mimari:** MVVM. Oyunun tüm durumu tek bir `GameViewModel` içinde tutulur; ekranlar `GameState` değerine göre değişir.
+* **Arayüz:** Tamamı SwiftUI. Renkler ve yazı stilleri `Views/Theme.swift` içinde, arka plandaki daireler `Views/Decor.swift` içinde tanımlıdır.
+* **Panda:** Hazır bir görsel değil; `Views/PandaView.swift` içinde `Canvas` ile çizilir, bu yüzden her boyutta nettir ve yüz ifadesi değişebilir.
+* **Kart kaydırma:** `DragGesture` ile parmağı izler; karar kartın bırakıldığı yere değil, hızına göre varacağı yere bakılarak verilir.
+* **Geri bildirim:** `UIFeedbackGenerator` ile titreşim, `AudioToolbox` ile sistem sesleri.
+* **Veri:** Kartlar uygulamayla gelen JSON dosyalarından okunur (`Resources/`); ağ bağlantısı gerekmez.
+* **Hedef:** iOS 17 ve üstü. iPhone'da yalnızca dikey kullanım, iPad desteklenir.
 
 ---
 
@@ -61,7 +63,7 @@ Projeyi kendi ortamınızda incelemek veya geliştirmek için aşağıdaki adım
     ```bash
     git clone https://github.com/aliyakarr9/WordGuess.git
     ```
-2.  İndirdiğiniz klasördeki `WordGuess.xcodeproj` dosyasını çift tıklayarak **Xcode** üzerinde açın.
+2.  İndirdiğiniz klasördeki `WordGuess.xcodeproj` dosyasını çift tıklayarak **Xcode** (16 veya üstü) üzerinde açın.
 3.  Üst menüden uygun bir **Simülatör** veya bilgisayarınıza bağlı gerçek bir **iOS cihazı** seçin.
 4.  `Cmd + R` tuş kombinasyonuna basarak (veya Play butonuna tıklayarak) projeyi derleyip çalıştırın.
 
@@ -79,3 +81,6 @@ Eğer kelime kütüphanesine yeni kelimeler eklemek, yeni kategoriler oluşturma
 ---
 
 👨‍💻 **Geliştiren & Tasarlayan:** [Ali Yakar](https://github.com/aliyakarr9)  
+📧 İletişim, işbirlikleri ve geri bildirim için GitHub üzerinden bana ulaşabilirsiniz.
+
+> *"İyi bir oyun, sadece kurallarıyla değil, yaşattığı deneyimle akılda kalır."*
