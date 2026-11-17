@@ -33,13 +33,15 @@
 
 ## 📸 Ekran Görüntüleri
 
-| Paket Seçimi | Oyun Ayarları | Oyun Ekranı |
-|---|---|---|
-| <img src="Screenshots/paketekrani.jpg" width="220"> | <img src="Screenshots/ayarekrani.jpg" width="220"> | <img src="Screenshots/oyunekrani.jpg" width="220"> |
+| Paketler | Kurulum | Oyun |
+|:---:|:---:|:---:|
+| <img src="Screenshots/paketler.jpg" width="220" alt="Paket seçim ekranı"> | <img src="Screenshots/kurulum.jpg" width="220" alt="Oyun kurulum ekranı"> | <img src="Screenshots/oyun.jpg" width="220" alt="Oyun ekranı"> |
+| Yedi paket, her biri kendi renginde. Yanındaki sayı paketteki kart sayısı. | Takım adları, tur süresi, hedef skor ve pas hakkı. Ekran seçilen paketin rengini alır. | Kalan süre, tur puanı, kart ve üç eylem. Sağ üstte "+3" puanı ve "3 üst üste" serisi görünüyor. |
 
-| Sıra Devri | Kazanan Ekranı |
-|---|---|
-| <img src="Screenshots/skorekrani.jpg" width="220"> | <img src="Screenshots/sampiyonekrani.jpg" width="220"> |
+| Sıra Devri | Kazanan |
+|:---:|:---:|
+| <img src="Screenshots/sira-devri.jpg" width="220" alt="Sıra devri ekranı"> | <img src="Screenshots/kazanan.jpg" width="220" alt="Kazanan ekranı"> |
+| Tur bitince sıranın kimde olduğu, iki takımın skoru ve son turun özeti. | Hedefe ilk ulaşan takım kazanır: taçlı panda, final skoru ve konfeti. |
 
 ---
 
