@@ -85,4 +85,4 @@ Eğer kelime kütüphanesine yeni kelimeler eklemek, yeni kategoriler oluşturma
 👨‍💻 **Geliştiren & Tasarlayan:** [Ali Yakar](https://github.com/aliyakarr9)  
 📧 İletişim, işbirlikleri ve geri bildirim için GitHub üzerinden bana ulaşabilirsiniz.
 
-> *"İyi bir oyun, sadece kurallarıyla değil, yaşattığı deneyimle akılda kalır."*
+
