@@ -45,6 +45,14 @@
 
 ---
 
+## 📋 Ürün Belgeleri
+
+* **[Ürün gereksinimleri (PRD)](docs/PRD.md):** Çözülen problem, hedef kullanıcı, kapsam, başarı ölçütleri ve riskler.
+* **[Kararlar](docs/KARARLAR.md):** Alınan ürün kararları, gerekçeleri ve her birinin bedeli.
+* **[Yol haritası](docs/YOL-HARITASI.md):** Sıradaki işler ve neden o sırada oldukları.
+
+---
+
 ## 🛠 Teknik Detaylar & Mimari
 
 * **Mimari:** MVVM. Oyunun tüm durumu tek bir `GameViewModel` içinde tutulur; ekranlar `GameState` değerine göre değişir.
